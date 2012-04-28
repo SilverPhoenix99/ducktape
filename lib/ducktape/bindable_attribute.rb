@@ -13,7 +13,7 @@ module Ducktape
     include Hookable
 
     attr_reader :owner,    # Bindable
-                :name,     # Symbol
+                :name,     # String
                 :source,   # BindingSource
                 #:targets, # { BindableAttribute => BindingSource }
                 :value     # Object
@@ -21,7 +21,7 @@ module Ducktape
     def_hook :on_changed
 
     def initialize(owner, name)
-      @owner, @name, @targets, @source = owner, name, {}, nil
+      @owner, @name, @targets, @source = owner, name.to_s, {}, nil
       reset_value(false)
     end
 
@@ -94,11 +94,11 @@ module Ducktape
 
     # source: BindingSource
     def self.attach(source, target, propagate)
-      target.instance_eval {
+      target.instance_eval do
         detach(@source.source, self, false) if @source
         @source = source
         reset_value(propagate)
-      }
+      end
 
       source.source.instance_eval { @targets[target] = source }
     end
