@@ -2,7 +2,9 @@ Ducktape
 =========
 
 Bindable attributes
+
 To install gem:
+
 gem install ducktape
 
 Usage Samples
