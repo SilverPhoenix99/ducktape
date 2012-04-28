@@ -1,7 +1,7 @@
 Ducktape
 =========
 
-Bindable attributes
+Trully outrageous bindable attributes
 
 To install gem:
 
@@ -40,7 +40,7 @@ Validation works with procs as well:
      class X
        include Bindable
      
-       bindable :name, validate: [String, Symbol]
+       bindable :name, validate: 
      
        def initialize(name)
          self.name = name
@@ -62,6 +62,12 @@ You can also set default values for your BA:
      
 
 Then you can watch for changes in a BA
+	 
+	 def attribute_changed(event, owner, attr_name, old_value, new_value)
+	   puts "The instance #{owner.object_id.to_s(16)} of class #{owner.class} called the event #{event} and so, changed the attribute #{attr_name} from #{old_value.inspect} to #{new_value.inspect}"
+	 end
+
+
 
 	 class X
 	   include Bindable
@@ -70,32 +76,21 @@ Then you can watch for changes in a BA
 	   bindable :age, validate: Integer
 	   bindable :points, validate: Integer
 	   
-	   def iitialize(name, age, points)
+	   def initialize(name, age, points)
 	     self.name = name
 		 self.age = age
 		 self.points = points
-		 {
-            :name   => :name_changed,
-            :age    => :age_changed,
-            :points => :points_changed
-         }.each do |k, v|
-                on_changed k, &method(v)
+		 %w'name age points'.each { |k, v| on_changed k, &method(:attribute_changed) }
 	   end
 	   
-	   def name_changed(_, _, _, _, _)
-	     puts "your name changed to #{self.name}" 
-	   end
-	   
-	   def age_changed(_, _, _, _, _)
-	     puts "your age changed to #{self.age}" 
-	   end
-	   
-	   def points_changed(_, _, _, _, _)
-	     puts "your points changed to #{self.points}" 
-	   end
 	 end
 
-On `on_changed` hook call the arguments are the name of the event (`'on_changed'`), the owner of the BA (the class `X`), the name of the BA (name, age, points, etc...), the old value and the new value
+On `on_changed` hook call the arguments are:
++ the name of the event (`'on_changed'`)
++ the owner of the BA (the instance of `X` that sent the message),
++ the name of the BA (name, age, points, etc...),
++ the old value
++ the new value
 	 
 Hookables
 ---------
