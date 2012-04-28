@@ -1,0 +1,4 @@
+bindables
+=========
+
+Bindable attributes
