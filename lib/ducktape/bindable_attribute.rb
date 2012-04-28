@@ -1,3 +1,5 @@
+autoload :Set, 'set'
+
 module Ducktape
 
   class InvalidAttributeValueError < StandardError
@@ -12,8 +14,8 @@ module Ducktape
 
     attr_reader :owner,    # Bindable
                 :name,     # Symbol
-                :source,   # BindableSource
-                #:targets, # { BindableAttribute => BindableSource }
+                :source,   # BindingSource
+                #:targets, # { BindableAttribute => BindingSource }
                 :value     # Object
 
     def_hook :on_changed
@@ -54,7 +56,7 @@ module Ducktape
       return if exclusions.member? self
       exclusions << self
 
-      if value.is_a? BindableSource
+      if value.is_a? BindingSource
         BindableAttribute.attach(value, self, false)
 
         #update value
@@ -83,14 +85,14 @@ module Ducktape
 
     def propagate_to_source
       return false unless @source
-      BindableSource::PROPAGATE_TO_SOURCE.member? @source.mode
+      BindingSource::PROPAGATE_TO_SOURCE.member? @source.mode
     end
 
     def targets_to_propagate
-      @targets.select { |_, b| BindableSource::PROPAGATE_TO_TARGETS.member? b.mode }
+      @targets.select { |_, b| BindingSource::PROPAGATE_TO_TARGETS.member? b.mode }
     end
 
-    # source: BindableSource
+    # source: BindingSource
     def self.attach(source, target, propagate)
       target.instance_eval {
         detach(@source.source, self, false) if @source

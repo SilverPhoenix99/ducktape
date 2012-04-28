@@ -9,12 +9,9 @@ module Ducktape
       def bindable(name, options = {})
         m = BindableAttributeMetadata.new(metadata(name) || name, options)
         @bindings_metadata[name.to_s] = m
-        if !options.has_key?(:readable) or options[:readable]
-          define_method name, ->{get_bindable_attr(name).value}
-        end
-        if !options.has_key?(:writable) or options[:writable]
-          define_method "#{name}=", ->(value){get_bindable_attr(name).value = value}
-        end
+        define_method name, ->{get_bindable_attr(name).value} if !options.has_key?(:readable) or options[:readable]
+        define_method "#{name}=", ->(value){get_bindable_attr(name).value = value} if !options.has_key?(:writable) or options[:writable]
+        nil
       end
 
       #TODO improve metadata search

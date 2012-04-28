@@ -5,5 +5,5 @@ module Ducktape
     :BindableAttributeMetadata => 'bindable_attribute_metadata',
     :BindingSource             => 'binding_source',
     :Hookable                  => 'hookable'
-  }.each { |k, v| autoload k, "bindables/#{v}" }
+  }.each { |k, v| autoload k, "ducktape/#{v}" }
 end
