@@ -13,6 +13,7 @@ Usage Samples
 Bindable attributes (BA) work just like normal attributes. To assign a BA to a class you just need to declare it like a attr_accessor:
 
      require 'bindables'
+	 
      class X
        include Bindable
 
@@ -67,8 +68,6 @@ Then you can watch for changes in a BA
 	   puts "The instance #{owner.object_id.to_s(16)} of class #{owner.class} called the event #{event} and so, changed the attribute #{attr_name} from #{old_value.inspect} to #{new_value.inspect}"
 	 end
 
-
-
 	 class X
 	   include Bindable
 	   
@@ -82,8 +81,13 @@ Then you can watch for changes in a BA
 		 self.points = points
 		 %w'name age points'.each { |k, v| on_changed k, &method(:attribute_changed) }
 	   end
-	   
 	 end
+	 
+	 x = X.new('Richad', 23, 150)
+	 
+	 x.on_changed 'name', &->(_, _, _, _, new_value) { puts "Hello #{new_value}!"}
+	 
+	 x.name = 'Richard'
 
 On `on_changed` hook call the arguments are:
 + the name of the event (`'on_changed'`)
