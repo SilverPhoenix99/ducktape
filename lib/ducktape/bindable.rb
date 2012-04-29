@@ -10,8 +10,8 @@ module Ducktape
         name = name.to_s
         m = BindableAttributeMetadata.new(metadata(name) || name, options)
         @bindings_metadata[name.to_s] = m
-        define_method name, ->{get_bindable_attr(name).value} if !options.has_key?(:readable) or options[:readable]
-        define_method "#{name}=", ->(value){get_bindable_attr(name).value = value} if !options.has_key?(:writable) or options[:writable]
+        define_method name, ->{ get_bindable_attr(name).value } unless options[:access] == :writeonly
+        define_method "#{name}=", ->(value){ get_bindable_attr(name).value = value } unless options[:access] == :readonly
         nil
       end
 
