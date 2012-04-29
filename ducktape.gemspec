@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name          = 'ducktape'
-  s.version       = '0.0.2'
-  s.date          = '2012-04-29'
+  s.version       = '0.0.3'
+  s.date          = '2012-04-30'
   s.summary       = 'Truly outrageous bindable attributes'
   s.description   = 'Truly outrageous bindable attributes'
   s.authors       = %w'SilverPhoenix99 P3t3rU5'
