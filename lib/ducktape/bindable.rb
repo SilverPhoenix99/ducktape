@@ -7,15 +7,10 @@ module Ducktape
 
   module Bindable
     module ClassMethods
-      def inherited(child)
-        super
-        child.instance_eval { @bindings_metadata = {} }
-      end
-
       def bindable(name, options = {})
         name = name.to_s
         m = BindableAttributeMetadata.new(metadata(name) || name, options)
-        @bindings_metadata[name] = m
+        bindings_metadata[name] = m
         define_method name, ->() { get_value(name) } unless options[:access] == :writeonly
         define_method "#{name}=", ->(value) { set_value(name, value) } unless options[:access] == :readonly
         nil
@@ -24,17 +19,21 @@ module Ducktape
       #TODO improve metadata search
       def metadata(name)
         name = name.to_s
-        m = @bindings_metadata[name]
+        m = bindings_metadata[name]
         return m if m
         return nil unless superclass.respond_to?(:metadata) && (m = superclass.metadata(name))
         m = m.dup
-        @bindings_metadata[name] = m
+        bindings_metadata[name] = m
+      end
+
+      protected
+      def bindings_metadata
+        @bindings_metadata ||= {}
       end
     end
 
     def self.included(base)
       base.extend(ClassMethods)
-      base.instance_eval { @bindings_metadata = {} }
     end
 
     def self.extended(_)
@@ -78,7 +77,7 @@ module Ducktape
     end
 
     def get_bindable_attr(name)
-      raise AttributeNotDefinedError.new(self.class, name.to_s) unless metadata(name)
+      raise AttributeNotDefinedError.new(self.class, name.to_s) unless self.class.metadata(name)
       bindable_attrs[name.to_s] ||= BindableAttribute.new(self, name)
     end
   end

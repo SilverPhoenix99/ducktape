@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'ducktape'
-  s.version       = '0.0.4'
+  s.version       = '0.0.5'
   s.date          = '2012-04-30'
   s.summary       = 'Truly outrageous bindable attributes'
   s.description   = 'Truly outrageous bindable attributes'

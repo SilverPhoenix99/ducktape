@@ -251,7 +251,7 @@ Note that if validation is defined, then it will only happen after coercion is a
 You can watch for changes in a BA by using the public instance method `#on_changed(attr_name, &block)`. Here's an example:
 
 ```ruby
-def attribute_changed(event, owner, attr_name, old_value, new_value)
+def attribute_changed(event, owner, attr_name, new_value, old_value)
   puts "#{owner.class}<#{owner.object_id.to_s(16)}> called the event #{event.inspect} and changed the attribute #{attr_name.inspect} from #{old_value.inspect} to #{new_value.inspect}"
 end
 
@@ -292,8 +292,8 @@ The `on_changed` hook has the following arguments:
 * the name of the event (in this case, `'on_changed'`)
 * the caller/owner of the BA (the instance that sent the message),
 * the name of the BA (`name`, `age`, `points`, etc...),
-* the old value,
-* the new value
+* the new value,
+* the old value
 
 Hookables
 ---------
