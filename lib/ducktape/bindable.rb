@@ -1,4 +1,10 @@
 module Ducktape
+  class AttributeNotDefinedError < StandardError
+    def initialize(klass, name)
+      super("attribute #{name.to_s.inspect} not defined for class #{klass}")
+    end
+  end
+
   module Bindable
     module ClassMethods
       def inherited(child)
@@ -9,9 +15,9 @@ module Ducktape
       def bindable(name, options = {})
         name = name.to_s
         m = BindableAttributeMetadata.new(metadata(name) || name, options)
-        @bindings_metadata[name.to_s] = m
-        define_method name, ->{ get_bindable_attr(name).value } unless options[:access] == :writeonly
-        define_method "#{name}=", ->(value){ get_bindable_attr(name).value = value } unless options[:access] == :readonly
+        @bindings_metadata[name] = m
+        define_method name, ->() { get_value(name) } unless options[:access] == :writeonly
+        define_method "#{name}=", ->(value) { set_value(name, value) } unless options[:access] == :readonly
         nil
       end
 
@@ -47,7 +53,7 @@ module Ducktape
 
     def on_changed(attr_name, &block)
       return nil unless block
-      get_bindable_attr(attr_name.to_s).send(:on_changed, &block)
+      get_bindable_attr(attr_name.to_s).on_changed(&block)
       block
     end
 
@@ -57,13 +63,23 @@ module Ducktape
       block
     end
 
+    protected
+    def get_value(attr_name)
+      get_bindable_attr(attr_name.to_s).value
+    end
+
+    def set_value(attr_name, value)
+      get_bindable_attr(attr_name.to_s).value = value
+    end
+
     private
     def bindable_attrs
       @bindable_attrs ||= {}
     end
 
     def get_bindable_attr(name)
-      bindable_attrs[name.to_s] ||= BindableAttribute.new(self, name.to_s)
+      raise AttributeNotDefinedError.new(self.class, name.to_s) unless metadata(name)
+      bindable_attrs[name.to_s] ||= BindableAttribute.new(self, name)
     end
   end
 end
