@@ -305,8 +305,8 @@ Has you might have seen, Ducktape comes with hooks, which is what powers the `on
 You can easily define a hook by using `def_hook`:
 
 ```ruby
-def called_load(event, caller)
-  puts "#{caller.class}<#{caller.object_id.to_s(16)}> called #{event.inspect}"
+def called_load(event, owner)
+  puts "#{owner.class}<#{owner.object_id.to_s(16)}> called #{event.inspect}"
 end
 
 class X
@@ -329,16 +329,72 @@ x.on_loaded &method(:called_load)
 x.load
 ```
 
-The output should be:
+The output should be something like:
 ```ruby
 => "X<14e35b4> called \"on_loaded\""
 ```
 
+### Removing hooks
+
+To remove all hooks from an object call the `#clear_hooks` method. To select a single hook, pass the name of the hook as a parameter. The next section has an example of this.
+
 ### Hookable arrays
 
+A Ducktape::HookableArray is a wrapper for arrays that allows you to add hooks to modifiers of the array.
+To add a hook to a specific modifier you just have to pass a block to a method that has the same name as the modifier, prefixed with `on_`.
 
+There are two exceptions to the naming convention:
+* `HookableArray#[]=`: pass the hook through the `on_assign` method.
+* `HookableArray#<<`: pass the hook through the `on_append` method.
+
+The parameters for all these hooks are very similar to the ones used for bindables:
+* the name of the event (for example, `'on_assign'`)
+* the instance of `HookableArray` that triggered the hook
+* an array of the arguments that were passed to the method that triggered the hook (for example, the index and value of the `[]=` method)
+* and the result of the call to the method
+
+Additionally, there is a generic `on_changed` hook, that is called for every modifier. In this case, the parametes are:
+* the name of the event (for example, `'on_assign'`)
+* the instance of `HookableArray` that triggered the hook
+* the name of the method (`"[]="`, `"<<"`, "sort!", etc...) that triggered the hook
+* an array of the arguments that were passed to the method that triggered the hook (for example, the index and value of the `[]=` method)
+* and the result of the call to the method
+
+Here is an example that shows how to use the hooks on a HookableArray:
+
+```ruby
+a = Ducktape::HookableArray[1, :x] #same as new()
+a.on_append do |event, owner, args, result|
+  puts "#{event.inspect}, #{owner.class}<#{owner.object_id.to_s(16)}>, #{args.inspect}, #{result.inspect}"
+end
+
+a.on_changed do |event, owner, name, args, result|
+  puts "#{event.inspect}, #{owner.class}<#{owner.object_id.to_s(16)}>, #{name.inspect}, #{args.inspect}, #{result.inspect}"
+end
+
+a << 'hi'
+```
+
+The output would be something like:
+```ruby
+=> "\"on_append\", Ducktape::HookableArray<37347c>, [\"hi\"], [1, :x, \"hi\"]"
+=> "\"on_changed\", Ducktape::HookableArray<37347c>, \"<<\", [\"hi\"], [1, :x, \"hi\"]"
+```
+
+If you then do:
+```ruby
+a.clear_hooks('on_append')
+
+a << 'bye'
+```
+
+The output will only be for the `on_changed` hook, that wasn't removed:
+```ruby
+=> "\"on_changed\", Ducktape::HookableArray<37347c>, \"<<\", [\"bye\"], [1, :x, \"hi\", \"bye\"]"
+```
 
 Future work
 ===========
-* Arrays and hashes passed to BA's should check for element changes (collections with hooks).
-* Multi sourced BA's.
+* Hashes passed to BA's should check for element changes (hashes with hooks).
+* Multi-sourced BA's.
+* More complex binding source paths instead of just the member name (e.g.: ruby like 'a.b.c' or xml like 'a/b/c').

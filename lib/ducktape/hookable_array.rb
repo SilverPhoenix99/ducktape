@@ -3,7 +3,7 @@ module Ducktape
     include Hookable
 
     def self.[](*args)
-      new(*args)
+      new(args)
     end
 
     def self.try_convert(obj)
@@ -49,6 +49,6 @@ module Ducktape
        map! pop push reject! replace reverse! rotate! select! shift shuffle! slice! sort!
        sort_by! uniq! unshift'.each { |m| compile_hook.(m) }
 
-    { '[]=' => 'assoc', '<<' => 'append' }.each { |k, v| compile_hook.(k, v) }
+    { '[]=' => 'assign', '<<' => 'append' }.each { |k, v| compile_hook.(k, v) }
   end
 end
