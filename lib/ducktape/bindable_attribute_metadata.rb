@@ -1,53 +1,58 @@
 module Ducktape
   class BindableAttributeMetadata
 
-  		attr_reader :name
+    VALID_OPTIONS = [:access, :default, :validate, :coerce].freeze
 
-  		def initialize(name, options = {})
-  			if name.is_a? BindableAttributeMetadata
-  				@name = name.name
-  				@default = options[:default] || name.instance_variable_get(:@default)
-  				@validation = options[:validate] || name.instance_variable_get(:@validation)
-  				@coercion = options[:coerce] || name.instance_variable_get(:@coercion)
-  			else
-  				@name = name
-  				@default = options[:default]
-  				@validation = options[:validate]
-  				@coercion = options[:coerce]
-  			end
+    attr_reader :name
 
-  			@validation = [*@validation] unless @validation.nil?
-  		end
+    def initialize(name, options = {})
 
-  		def default=(value)
-  			@default = value
-  		end
+      options.each_key { |k| puts "WARNING: invalid option #{k.inspect} for #{name.inspect} attribute. Will be ignored." unless VALID_OPTIONS.member?(k) }
 
-  		def default
-  			@default.is_a?(Proc) ? @default.call : @default
-  		end
+      if name.is_a? BindableAttributeMetadata
+        @name = name.name
+        @default = options[:default] || name.instance_variable_get(:@default)
+        @validation = options[:validate] || name.instance_variable_get(:@validation)
+        @coercion = options[:coerce] || name.instance_variable_get(:@coercion)
+      else
+        @name = name
+        @default = options[:default]
+        @validation = options[:validate]
+        @coercion = options[:coerce]
+      end
 
-  		def validation(*options, &block)
-  			options << block
-  			@validation = options
-  		end
+      @validation = [*@validation] unless @validation.nil?
+    end
 
-  		def validate(value)
-  			return true unless @validation
-  			@validation.each do |validation|
-  				return true if (validation.is_a?(Class) and value.is_a?(validation)) or
-  							   (validation.is_a?(Proc) and validation.call(value)) or
-  								value == validation
-  			end
-  			false
-  		end
+    def default=(value)
+      @default = value
+    end
 
-  		def coercion(&block)
-  			@coercion = block
-  		end
+    def default
+      @default.is_a?(Proc) ? @default.call : @default
+    end
 
-  		def coerce(owner, value)
-  			@coercion ? @coercion.call(owner, value) : value
-  		end
-  	end
+    def validation(*options, &block)
+      options << block
+      @validation = options
+    end
+
+    def validate(value)
+      return true unless @validation
+      @validation.each do |validation|
+        return true if (validation.is_a?(Class) and value.is_a?(validation)) or
+                 (validation.is_a?(Proc) and validation.call(value)) or
+                value == validation
+      end
+      false
+    end
+
+    def coercion(&block)
+      @coercion = block
+    end
+
+    def coerce(owner, value)
+      @coercion ? @coercion.call(owner, value) : value
+    end
+  end
 end

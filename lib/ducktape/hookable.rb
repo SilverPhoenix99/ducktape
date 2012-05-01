@@ -25,6 +25,15 @@ module Ducktape
       self.hooks[event.to_s].delete(block)
     end
 
+    def clear_hooks(event = nil)
+      if event
+        self.hooks.delete(event.to_s)
+      else
+        self.hooks.clear
+      end
+      nil
+    end
+
     protected
     def hooks
       @hooks ||= Hash.new { |h,k| h[k.to_s] = [] }

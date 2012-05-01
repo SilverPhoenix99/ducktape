@@ -1,13 +1,16 @@
 Ducktape
 ========
 
-A [truly outrageous](http://youtu.be/20BZID081Vk) gem for bindable attributes.
+A [truly outrageous](http://youtu.be/dSPb56-_I98) gem for bindable attributes.
 
 To install:
 
 ```
 gem install ducktape
 ```
+
+Bindable attributes
+-------------------
 
 Bindable attributes (BA) work just like normal attributes. To assign a BA to a class you just need to declare it like an attr_accessor:
 
@@ -295,8 +298,8 @@ The `on_changed` hook has the following arguments:
 * the new value,
 * the old value
 
-Hookables
----------
+Hooks
+-----
 
 Has you might have seen, Ducktape comes with hooks, which is what powers the `on_changed` for bindable attributes.
 You can easily define a hook by using `def_hook`:
@@ -331,7 +334,11 @@ The output should be:
 => "X<14e35b4> called \"on_loaded\""
 ```
 
+### Hookable arrays
+
+
+
 Future work
 ===========
-* Arrays passed to BA's should check for element changes.
+* Arrays and hashes passed to BA's should check for element changes (collections with hooks).
 * Multi sourced BA's.

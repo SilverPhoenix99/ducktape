@@ -1,4 +1,5 @@
 module Ducktape
+
   class AttributeNotDefinedError < StandardError
     def initialize(klass, name)
       super("attribute #{name.to_s.inspect} not defined for class #{klass}")
