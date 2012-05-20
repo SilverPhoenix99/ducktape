@@ -338,29 +338,30 @@ The output should be something like:
 
 To remove all hooks from an object call the `#clear_hooks` method. To select a single hook, pass the name of the hook as a parameter. The next section has an example of this.
 
-### Hookable arrays
+### Hookable arrays and hashes
 
-A Ducktape::HookableArray is a wrapper for arrays that allows you to add hooks to modifiers of the array.
+A `Ducktape::HookableArray` is a wrapper for arrays that allows you to add hooks to modifiers of the array. The same concept applies to `Ducktape::HookableHash` in relation to hashes.
 To add a hook to a specific modifier you just have to pass a block to a method that has the same name as the modifier, prefixed with `on_`.
 
-There are two exceptions to the naming convention:
-* `HookableArray#[]=`: pass the hook through the `on_assign` method.
+There are three exceptions to the naming convention:
 * `HookableArray#<<`: pass the hook through the `on_append` method.
+* `HookableArray#[]=`: pass the hook through the `on_store` method.
+* `HookableHash#[]=`: pass the hook through the `on_store` method.
 
-The parameters for all these hooks are very similar to the ones used for bindables:
-* the name of the event (for example, `'on_assign'`)
-* the instance of `HookableArray` that triggered the hook
+The parameters for all the hooks are very similar to the ones used for bindables:
+* the name of the event (for example, `'on_store'`)
+* the instance of `HookableArray` or `HookableHash` that triggered the hook
 * an array of the arguments that were passed to the method that triggered the hook (for example, the index and value of the `[]=` method)
 * and the result of the call to the method
 
 Additionally, there is a generic `on_changed` hook, that is called for every modifier. In this case, the parametes are:
-* the name of the event (for example, `'on_assign'`)
-* the instance of `HookableArray` that triggered the hook
+* the name of the event (for example, `'on_store'`)
+* the instance of `HookableArray` or `HookableHash` that triggered the hook
 * the name of the method (`"[]="`, `"<<"`, "sort!", etc...) that triggered the hook
 * an array of the arguments that were passed to the method that triggered the hook (for example, the index and value of the `[]=` method)
 * and the result of the call to the method
 
-Here is an example that shows how to use the hooks on a HookableArray:
+Here is an example that shows how to use the hooks on a `HookableArray`:
 
 ```ruby
 a = Ducktape::HookableArray[1, :x] #same as new()
@@ -388,13 +389,13 @@ a.clear_hooks('on_append')
 a << 'bye'
 ```
 
-The output will only be for the `on_changed` hook, that wasn't removed:
+The output will only be for the `on_changed` hook, which wasn't removed:
 ```ruby
 => "\"on_changed\", Ducktape::HookableArray<37347c>, \"<<\", [\"bye\"], [1, :x, \"hi\", \"bye\"]"
 ```
 
 Future work
 ===========
-* Hashes passed to BA's should check for element changes (hashes with hooks).
+* Pass a hook by method name. This will provide a more dynamic binding if the method is overriden.
 * Multi-sourced BA's.
 * More complex binding source paths instead of just the member name (e.g.: ruby like 'a.b.c' or xml like 'a/b/c').
