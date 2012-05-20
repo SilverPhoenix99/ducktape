@@ -477,3 +477,4 @@ Future work
 ===========
 * Multi-sourced BA's.
 * More complex binding source paths instead of just the member name (e.g.: ruby like 'a.b.c' or xml like 'a/b/c').
+* Add built-in support for hookable arrays and hashes in bindable attributes.
