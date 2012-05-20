@@ -10,6 +10,10 @@ module Ducktape
     def hash() @content.hash end
     def dup() self.class.new(@content) end
 
+    def eq?(other)
+      equal?(other) || self == other
+    end
+
     def method_missing(name, *args, &block)
       result = @content.public_send(name, *args, &block)
       result = self if result.equal?(@content)
