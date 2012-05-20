@@ -1,9 +1,8 @@
 module Ducktape
-  class HookableArray
-    include Hookable
+  class HookableArray < HookableCollectionBase
 
     def self.[](*args)
-      new(args)
+      new([*args])
     end
 
     def self.try_convert(obj)
@@ -13,42 +12,75 @@ module Ducktape
       new(obj)
     end
 
+    # Careful when duping arrays. Duping is shallow.
     def initialize(*args, &block)
-      @array = if args.length == 1 && (args[0].is_a?(Array) || args[0].is_a?(HookableArray))
-        args[0]
-      else
-        Array.new(*args, &block)
-      end
+      @content = if args.length == 1
+        arg = args[0]
+        case
+          when arg.is_a?(Array) then arg.dup
+          when arg.is_a?(HookableArray) then arg.instance_variable_get('@content').dup
+          when arg.is_a?(Enumerable) || arg.respond_to?(:to_a) then arg.to_a
+        end
+      end || Array.new(*args, &block)
     end
 
-    def method_missing(name, *args, &block)
-      @array.public_send(name, *args, &block)
-    end
-
-    def to_s() @array.to_s end
-    def inspect() @array.inspect end
+    def to_a() self end
     def to_ary() self end
 
-    def_hook 'on_changed'
-
-    compile_hook = ->(name, aka = nil) do
-      aka ||= name
-      aka = "on_#{aka}"
-
-      def_hook(aka) unless method_defined?(aka)
-
-      define_method(name) do |*args, &block|
-        result = @array.public_send(__method__, *args, &block)
-        call_hooks(aka, self, args, result)
-        call_hooks('on_changed', self, name, args, result)
-        result
-      end
+    def ==(other_ary)
+      other_ary = Array.try_convert(other_ary)
+      return false unless other_ary || other_ary.count != self.count
+      enum = other_ary.each
+      each { |v1| return false unless v1 == enum.next }
+      true
     end
 
-    %w'clear collect! compact! concat delete delete_at delete_if fill flatten! insert keep_if
-       map! pop push reject! replace reverse! rotate! select! shift shuffle! slice! sort!
-       sort_by! uniq! unshift'.each { |m| compile_hook.(m) }
+    def eq?(other_ary)
+      equal?(other_ary) || self == other_ary
+    end
 
-    { '[]=' => 'assign', '<<' => 'append' }.each { |k, v| compile_hook.(k, v) }
+    compile_hooks(
+      %w'delete
+        delete_at
+        pop
+        shift
+        slice!',
+      '[]=' => 'assign')
+
+    compile_hooks(
+      %w'clear
+        concat
+        fill
+        insert
+        push
+        replace
+        reverse!
+        rotate!
+        shuffle!
+        sort!
+        unshift',
+      '<<' => 'append') { self }
+
+    compile_hooks(
+      %w'collect!
+          compact!
+          delete_if
+          flatten!
+          keep_if
+          map!
+          reject!
+          select!
+          sort_by!
+          uniq!') { |v| v.equal?(@content) ? self : v }
+
+    wrap(
+      %w'combination
+        each
+        each_index
+        permutation
+        product
+        repeated_combination
+        repeated_permutation
+        reverse_each') { |v| v.equal?(@content) ? self : v }
   end
 end
