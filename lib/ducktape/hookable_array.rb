@@ -1,5 +1,6 @@
 module Ducktape
-  class HookableArray < HookableCollectionBase
+  class HookableArray
+    include HookableCollection
 
     def self.[](*args)
       new([*args])
@@ -40,47 +41,33 @@ module Ducktape
     end
 
     compile_hooks(
-      %w'delete
-        delete_at
-        pop
-        shift
-        slice!',
-      '[]=' => 'assign')
-
-    compile_hooks(
       %w'clear
-        concat
-        fill
-        insert
-        push
-        replace
-        reverse!
-        rotate!
-        shuffle!
-        sort!
-        unshift',
-      '<<' => 'append') { self }
-
-    compile_hooks(
-      %w'collect!
-          compact!
-          delete_if
-          flatten!
-          keep_if
-          map!
-          reject!
-          select!
-          sort_by!
-          uniq!') { |v| v.equal?(@content) ? self : v }
-
-    wrap(
-      %w'combination
-        each
-        each_index
-        permutation
-        product
-        repeated_combination
-        repeated_permutation
-        reverse_each') { |v| v.equal?(@content) ? self : v }
+      collect!
+      compact!
+      concat
+      delete
+      delete_at
+      delete_if
+      fill
+      flatten!
+      insert
+      keep_if
+      map!
+      pop
+      push
+      reject!
+      replace
+      reverse!
+      rotate!
+      select!
+      shift
+      shuffle!
+      slice!
+      sort!
+      sort_by!
+      uniq!
+      unshift',
+      '<<' => 'append',
+      '[]=' => 'assign')
   end
 end
