@@ -7,7 +7,8 @@ module Ducktape
 
     def initialize(name, options = {})
 
-      options.each_key { |k| puts "WARNING: invalid option #{k.inspect} for #{name.inspect} attribute. Will be ignored." unless VALID_OPTIONS.member?(k) }
+      options.keys.reject { |k| VALID_OPTIONS.member?(k) }.
+        each { |k| puts "WARNING: invalid option #{k.inspect} for #{name.inspect} attribute. Will be ignored." }
 
       if name.is_a? BindableAttributeMetadata
         @name = name.name
@@ -39,10 +40,11 @@ module Ducktape
 
     def validate(value)
       return true unless @validation
-      @validation.each do |validation|
-        return true if (validation.is_a?(Class) and value.is_a?(validation)) or
-                 (validation.is_a?(Proc) and validation.call(value)) or
-                value == validation
+      @validation.each do |v|
+        return true if ( v.is_a?(Class)  && value.is_a?(v) ) ||
+                       ( v.is_a?(Proc)   && v.(value)      ) ||
+                       ( v.is_a?(Regexp) && value =~ v     ) ||
+                         value == v
       end
       false
     end

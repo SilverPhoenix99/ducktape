@@ -51,9 +51,9 @@ module Ducktape
       nil
     end
 
-    def on_changed(attr_name, &block)
-      return nil unless block
-      get_bindable_attr(attr_name.to_s).on_changed(&block)
+    def on_changed(attr_name, hook = nil, &block)
+      return nil unless block || hook
+      get_bindable_attr(attr_name.to_s).on_changed(hook, &block)
       block
     end
 

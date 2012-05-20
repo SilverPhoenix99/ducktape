@@ -188,7 +188,7 @@ class X
   bindable :name, validate: [String, Symbol]
 
   def initialize(name)
-	self.name = name
+    self.name = name
   end
 end
 ```
@@ -202,8 +202,32 @@ class X
   bindable :name, validate: ->(value){ !value.nil? }
 
   def initialize(name)
-	self.name = name
+    self.name = name
   end
+end
+```
+
+Additionally, it has built-in support for regular expressions:
+
+```ruby
+class X
+  include Ducktape::Bindable
+
+  bindable :name, validate: /ruby/
+
+  def initialize(name)
+    self.name = name
+  end
+end
+
+#passes
+X.new('rubygems')
+
+#fails
+begin
+  X.new('diamonds')
+rescue => e
+  puts e.message
 end
 ```
 
@@ -266,12 +290,12 @@ class X
   bindable :points, validate: Integer
 
   def initialize(name, age, points)
-	self.name = name
-	self.age = age
-	self.points = points
+    self.name = name
+    self.age = age
+    self.points = points
 
-	# You can hook for any method available
-	%w'name age points'.each { |k, v| on_changed k, &method(:attribute_changed) }
+    # You can hook for any method available
+    %w'name age points'.each { |k, v| on_changed k, &method(:attribute_changed) }
   end
 end
 
@@ -315,16 +339,18 @@ class X
   def_hook :on_loaded #define one or more hooks
 
   def load
-	call_hooks(:on_loaded)
+    # do other stuff here
+
+    call_hooks(:on_loaded)
   end
 end
 
 x = X.new
 
-x.on_loaded &method(:called_load)
+x.on_loaded method(:called_load)
 
 #if we didn't create a hook with def_hook we could still use:
-#x.add_hook :on_loaded, &method(:called_load)
+#x.add_hook :on_loaded, method(:called_load)
 
 x.load
 ```
@@ -334,9 +360,62 @@ The output should be something like:
 => "X<14e35b4> called \"on_loaded\""
 ```
 
+### Named hooks
+
+It is possible to define a hook by providing a method name. This makes it possible to separate logic from definition.
+Note that the method must exist for the instance that calls the hooks (through `call_hooks` or `call_handlers`).
+
+```ruby
+#class logic file
+
+class Y
+  def called_load(event, owner)
+    puts "loaded #{self}" #self == owner
+  end
+
+  def load
+    #do some stuff here
+
+    call_hooks(:on_loaded)
+  end
+end
+```
+
+```ruby
+#instance definition file
+
+x = Y.tap do |y|
+  y.on_loaded :called_load
+end
+
+x.load
+```
+
+The output should be something like:
+```ruby
+=> "loaded Y<3539af>"
+```
+
+This also allows to dynamically bind the hook by overriding the method.
+
+```ruby
+#taking the same instance from before
+
+x.define_singleton_method(:called_load) { puts "singleton #{self} has loaded" }
+```
+
+The output should now be:
+```ruby
+=> "singleton Y<3539af> has loaded"
+```
+
 ### Removing hooks
 
-To remove all hooks from an object call the `#clear_hooks` method. To select a single hook, pass the name of the hook as a parameter. The next section has an example of this.
+To remove all hooks from an object call the `#clear_hooks` method. To remove all hooks from a single event, pass the name of the event as a parameter. The next section has an example of this.
+
+To remove a single hook from an event, call the `#remove_hook` with the name of the event, and the hook name or hook proc corresponding with how the hook was added.
+
+### Handlers
 
 ### Hookable arrays and hashes
 
@@ -396,6 +475,5 @@ The output will only be for the `on_changed` hook, which wasn't removed:
 
 Future work
 ===========
-* Pass a hook by method name. This will provide a more dynamic binding if the method is overriden.
 * Multi-sourced BA's.
 * More complex binding source paths instead of just the member name (e.g.: ruby like 'a.b.c' or xml like 'a/b/c').

@@ -4,7 +4,7 @@ module Ducktape
 
   class InvalidAttributeValueError < StandardError
     def initialize(name, value)
-      super("value #{value.inspect} is invalid for attribute '#{name}'")
+      super("value #{value.inspect} is invalid for attribute #{name.to_s.inspect}")
     end
   end
 
