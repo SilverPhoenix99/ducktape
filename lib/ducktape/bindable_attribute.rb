@@ -12,58 +12,59 @@ module Ducktape
 
     include Hookable
 
-    attr_reader :owner,    # Bindable
-                :name,     # String
-                :source,   # BindingSource
-                #:targets, # { BindableAttribute => BindingSource }
-                :value     # Object
+    attr_reader :owner    # Bindable
+    attr_reader :name     # String
+    attr_reader :source   # BindingSource
+    attr_reader :value    # Object
+
+    #attr_reader :targets # Hash{ BindableAttribute => BindingSource }
 
     def_hook :on_changed
 
     def initialize(owner, name)
-      @owner, @name, @targets, @source = owner, name.to_s, {}, nil
-      reset_value(false)
+      @owner, @name, @source, @targets = owner, name.to_s, nil, {}
+      reset_value
     end
 
     def metadata
       @owner.class.metadata(@name)
     end
 
+    def has_source?
+      !@source.nil?
+    end
+
     def value=(value)
       set_value(value)
     end
 
-    def remove_source(propagate = true)
-      detach(@source, self, propagate)
+    #If values are equal, it means that both attributes share the same value,
+    #if they are different, the values are independent.
+    #As such, self's value is reset if mode is both, or if mode is forward and values are equal;
+    #the source's value is reset of mode is reverse and values are equal.
+    def remove_source
+      return unless has_source?
+      bs, v = detach_source
+      reset_value if bs.mode == :both || (bs.mode == :forward && v == @value)
+      bs
     end
 
-    def reset_value(propagate = true)
-      meta = metadata
-      value = @source ? @source.source.value : meta.default
-
-      if propagate
-        self.value = value
-      else
-        @value = value
-      end
-
-      nil
+    def reset_value
+      set_value(metadata.default)
     end
 
-    protected #--------------------------------------------------------------
+    private #----------------------------------------------------------------
+
+    attr_reader :targets
 
     def set_value(value, exclusions = Set.new)
-      return if exclusions.member? self
+      return if exclusions.include? self
       exclusions << self
 
       if value.is_a? BindingSource
-        BindableAttribute.attach(value, self, false)
-
-        #update value
-        exclusions << @source.source
-
-        #new value is the new source value
-        value = @source.source.value
+        attach_source(value) #attach new binding source
+        exclusions << @source.source #update value
+        value = @source.source.value #new value is the new source value
       end
 
       #set effective value
@@ -73,43 +74,53 @@ module Ducktape
         raise InvalidAttributeValueError.new(@name, value) unless m.validate(value)
         old_value = @value
         @value = value
-        call_hooks('on_changed', owner, name, @value, old_value)
+
+        old_value.remove_hook('on_changed', method('hookable_value_changed')) if old_value.is_a?(Hookable)
+        @value.on_changed(method('hookable_value_changed')) if @value.is_a?(Hookable)
+
+        #call_hooks('on_changed', owner, name, @value, old_value)
+        call_hooks('on_changed', owner, attribute: name, value: @value, old_value: old_value)
       end
 
-      #propagate value
-      @source.source.set_value(value, exclusions) if propagate_to_source
-      targets_to_propagate.each { |target, _| target.set_value(value, exclusions) }
+      propagate_value(exclusions)
+      @value
     end
 
-    private #----------------------------------------------------------------
-
-    def propagate_to_source
-      return false unless @source
-      BindingSource::PROPAGATE_TO_SOURCE.member? @source.mode
-    end
-
-    def targets_to_propagate
-      @targets.select { |_, b| BindingSource::PROPAGATE_TO_TARGETS.member? b.mode }
+    def detach_source
+      bs = @source
+      v = bs.source.value
+      @source = nil
+      bs.source.send(:targets).delete(self)
+      bs.source.reset_value if bs.mode == :reverse && v == @value
+      [bs, v]
     end
 
     # source: BindingSource
-    def self.attach(source, target, propagate)
-      target.instance_eval do
-        detach(@source.source, self, false) if @source
-        @source = source
-        reset_value(propagate)
-      end
-
-      source.source.instance_eval { @targets[target] = source }
+    def attach_source(source)
+      detach_source
+      @source = source
+      source.source.send(:targets)[self] = source
+      nil
     end
 
-    # source: BindableAttribute
-    def self.detach(source, target, propagate)
-      return unless target.source and target.source.source == source
+    def propagate_value(exclusions)
+      to_src = @source && BindingSource::PROPAGATE_TO_SOURCE.member?(@source.mode)
+      @source.source.set_value(value, exclusions) if to_src
 
-      source.instance_eval { @targets.delete(target) }
-      target.instance_eval { @source = nil; reset_value(propagate) }
+      targets = @targets.select { |_, b| BindingSource::PROPAGATE_TO_TARGETS.member?(b.mode) }
+      targets.each { |target, _| target.set_value(value, exclusions) }
+    end
 
+    def hookable_value_notify(exclusions = Set.new)
+      return if exclusions.include? self
+      exclusions << self
+      call_hooks('on_changed', owner, attribute: name, value: @value)
+      propagate_value(exclusions)
+    end
+
+    def hookable_value_changed(event, caller) #TODO parameters
+      #TODO
+      hookable_value_notify
       nil
     end
   end

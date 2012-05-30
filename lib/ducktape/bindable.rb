@@ -41,38 +41,40 @@ module Ducktape
       raise 'Cannot extend, only include.'
     end
 
-    def unbind_source(name)
-      get_bindable_attr(name.to_s).remove_source(true)
+    def unbind_source(attr_name)
+      get_bindable_attr(attr_name).remove_source
       nil
     end
 
     def clear_bindings()
-      bindable_attrs.each { |_,attr| attr.remove_source() }
+      bindable_attrs.each { |_,attr| attr.remove_source }
       nil
     end
 
     def on_changed(attr_name, hook = nil, &block)
       return nil unless block || hook
-      get_bindable_attr(attr_name.to_s).on_changed(hook, &block)
+      get_bindable_attr(attr_name).on_changed(hook, &block)
       block
     end
 
     def unhook_on_changed(attr_name, block)
       return nil unless block
-      get_bindable_attr(attr_name.to_s).send(:remove_hook, :on_changed, block)
+      get_bindable_attr(attr_name).remove_hook(:on_changed, block)
       block
     end
 
-    protected
+    protected #--------------------------------------------------------------
+
     def get_value(attr_name)
-      get_bindable_attr(attr_name.to_s).value
+      get_bindable_attr(attr_name).value
     end
 
     def set_value(attr_name, value)
-      get_bindable_attr(attr_name.to_s).value = value
+      get_bindable_attr(attr_name).value = value
     end
 
-    private
+    private #----------------------------------------------------------------
+
     def bindable_attrs
       @bindable_attrs ||= {}
     end
