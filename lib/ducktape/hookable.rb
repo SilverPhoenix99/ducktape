@@ -10,7 +10,7 @@ module Ducktape
         define_method "make_#{type}s" do |*args|
           return if args.length == 0
 
-          def_hook 'on_changed' unless method_defined?('on_changed')
+          #def_hook 'on_changed' unless method_defined?('on_changed')
 
           names_hash = args.pop if args.last.is_a?(Hash)
           names_hash ||= {}
@@ -39,6 +39,7 @@ module Ducktape
 
     def self.included(base)
       base.extend(ClassMethods)
+      base.def_hook :on_changed unless base.method_defined? :on_changed
     end
 
     def self.extended(_)

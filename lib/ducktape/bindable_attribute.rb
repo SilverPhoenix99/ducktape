@@ -19,7 +19,7 @@ module Ducktape
 
     #attr_reader :targets # Hash{ BindableAttribute => BindingSource }
 
-    def_hook :on_changed
+    #def_hook :on_changed
 
     def initialize(owner, name)
       @owner, @name, @source, @targets = owner, name.to_s, nil, {}
@@ -75,10 +75,9 @@ module Ducktape
         old_value = @value
         @value = value
 
-        old_value.remove_hook('on_changed', method('hookable_value_changed')) if old_value.is_a?(Hookable)
-        @value.on_changed(method('hookable_value_changed')) if @value.is_a?(Hookable)
+        old_value.remove_hook('on_changed', method('hookable_value_changed')) if old_value.respond_to?('on_changed')
+        @value.on_changed(method('hookable_value_changed')) if @value.respond_to?('on_changed')
 
-        #call_hooks('on_changed', owner, name, @value, old_value)
         call_hooks('on_changed', owner, attribute: name, value: @value, old_value: old_value)
       end
 
@@ -103,24 +102,19 @@ module Ducktape
       nil
     end
 
+    def targets_to_propagate
+      targets = []
+      targets << @source.source if @source && BindingSource::PROPAGATE_TO_SOURCE.member?(@source.mode)
+      targets.concat(@targets.values.select { |b| BindingSource::PROPAGATE_TO_TARGETS.member?(b.mode) })
+    end
+
     def propagate_value(exclusions)
-      to_src = @source && BindingSource::PROPAGATE_TO_SOURCE.member?(@source.mode)
-      @source.source.set_value(value, exclusions) if to_src
-
-      targets = @targets.select { |_, b| BindingSource::PROPAGATE_TO_TARGETS.member?(b.mode) }
-      targets.each { |target, _| target.set_value(value, exclusions) }
+      targets_to_propagate.each { |target| target.set_value(value, exclusions) }
+      nil
     end
 
-    def hookable_value_notify(exclusions = Set.new)
-      return if exclusions.include? self
-      exclusions << self
+    def hookable_value_changed(*_)
       call_hooks('on_changed', owner, attribute: name, value: @value)
-      propagate_value(exclusions)
-    end
-
-    def hookable_value_changed(event, caller) #TODO parameters
-      #TODO
-      hookable_value_notify
       nil
     end
   end
