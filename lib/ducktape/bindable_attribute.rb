@@ -53,6 +53,10 @@ module Ducktape
       set_value(metadata.default)
     end
 
+    def to_s
+      "#<#{self.class}:0x#{object_id.to_s(16)} @name=#{name}>"
+    end
+
     private #----------------------------------------------------------------
 
     attr_reader :targets
@@ -86,6 +90,7 @@ module Ducktape
     end
 
     def detach_source
+      return unless @source
       bs = @source
       v = bs.source.value
       @source = nil
@@ -109,7 +114,7 @@ module Ducktape
     end
 
     def propagate_value(exclusions)
-      targets_to_propagate.each { |target| target.set_value(value, exclusions) }
+      targets_to_propagate.each { |target| target.send(:set_value, value, exclusions) }
       nil
     end
 

@@ -9,3 +9,5 @@ gem install ducktape
 ```
 
 Additional documentation can be found in the [Wiki](https://github.com/SilverPhoenix99/ducktape/wiki).
+
+**WARNING**: Version 0.3.0 is incompatible with version 0.2.1 and below.
