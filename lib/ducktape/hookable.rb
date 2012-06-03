@@ -76,11 +76,11 @@ module Ducktape
     # `#call_handlers` is similar to `#call_hooks`,
     # but stops calling other hooks when a hook returns a value other than nil or false.
     %w'hook handler'.each do |type|
-      define_method("call_#{type}s", ->(event, caller, *args) do #TODO change parameters
+      define_method("call_#{type}s", ->(event, caller = self, parms = {}) do
         return unless self.hooks.has_key? event.to_s
         self.hooks[event.to_s].each do |hook|
           hook = caller.method(hook) unless hook.respond_to?('call')
-          handled = hook.(event, caller, *args)
+          handled = hook.(event, caller, parms)
           break handled if type == 'handler' && handled
         end
       end)
