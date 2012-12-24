@@ -11,15 +11,15 @@ module Ducktape
         each { |k| puts "WARNING: invalid option #{k.inspect} for #{name.inspect} attribute. Will be ignored." }
 
       if name.is_a? BindableAttributeMetadata
-        @name = name.name
-        @default = options[:default] || name.instance_variable_get(:@default)
-        @validation = options[:validate] || name.instance_variable_get(:@validation)
-        @coercion = options[:coerce] || name.instance_variable_get(:@coercion)
+        @name       = name.name
+        @default    = options.has_key?(:default) ? options[:default] : name.instance_variable_get(:@default)
+        @validation = options.has_key?(:validate) ? options[:validate] : name.instance_variable_get(:@validation)
+        @coercion   = options.has_key?(:coerce) ? options[:coerce] : name.instance_variable_get(:@coercion)
       else
-        @name = name
-        @default = options[:default]
+        @name       = name
+        @default    = options[:default]
         @validation = options[:validate]
-        @coercion = options[:coerce]
+        @coercion   = options[:coerce]
       end
 
       @validation = [*@validation] unless @validation.nil?

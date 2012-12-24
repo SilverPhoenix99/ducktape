@@ -10,4 +10,4 @@ gem install ducktape
 
 Additional documentation can be found in the [Wiki](https://github.com/SilverPhoenix99/ducktape/wiki).
 
-<font color=red>**WARNING**: Version 0.3.0 is incompatible with version 0.2.1 and below.</font>
+<a href='http://www.pledgie.com/campaigns/18955'><img alt='Click here to lend your support to: ducktape and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/18955.png?skin_name=chrome' border='0' /></a>

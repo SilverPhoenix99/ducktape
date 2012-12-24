@@ -47,7 +47,7 @@ module Ducktape
     end
 
     def clear_bindings()
-      bindable_attrs.each { |_,attr| attr.remove_source }
+      bindable_attrs.each { |_, attr| attr.remove_source }
       nil
     end
 
