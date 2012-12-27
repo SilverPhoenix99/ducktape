@@ -1,9 +1,9 @@
 module Ducktape
   class BindableAttributeMetadata
 
-    VALID_OPTIONS = [:access, :default, :validate, :coerce].freeze
+    VALID_OPTIONS = [:access, :coerce, :default, :getter, :setter, :validate].freeze
 
-    attr_reader :name
+    attr_reader :name, :access, :getter, :setter
 
     def initialize(name, options = {})
 
@@ -15,11 +15,17 @@ module Ducktape
         @default    = options.has_key?(:default) ? options[:default] : name.instance_variable_get(:@default)
         @validation = options.has_key?(:validate) ? options[:validate] : name.instance_variable_get(:@validation)
         @coercion   = options.has_key?(:coerce) ? options[:coerce] : name.instance_variable_get(:@coercion)
+        @access     = options.has_key?(:access) ? options[:access] : name.access
+        @getter     = options.has_key?(:getter) ? options[:getter] : name.getter
+        @setter     = options.has_key?(:setter) ? options[:setter] : name.setter
       else
         @name       = name
         @default    = options[:default]
         @validation = options[:validate]
         @coercion   = options[:coerce]
+        @access     = options[:access]
+        @getter     = options[:getter]
+        @setter     = options[:setter]
       end
 
       @validation = [*@validation] unless @validation.nil?

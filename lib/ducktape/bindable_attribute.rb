@@ -79,10 +79,10 @@ module Ducktape
         old_value = @value
         @value = value
 
-        old_value.remove_hook('on_changed', method('hookable_value_changed')) if old_value.respond_to?('on_changed')
-        @value.on_changed(method('hookable_value_changed')) if @value.respond_to?('on_changed')
+        old_value.remove_hook(:on_changed, method(:hookable_value_changed)) if old_value.is_a?(Hookable)
+        @value.on_changed(method(:hookable_value_changed)) if @value.is_a?(Hookable)
 
-        call_hooks('on_changed', owner, attribute: name.dup, value: @value, old_value: old_value)
+        call_hooks(:on_changed, owner, attribute: name.dup, value: @value, old_value: old_value)
       end
 
       propagate_value(exclusions)

@@ -6,14 +6,28 @@ module Ducktape
     end
   end
 
+  class InconsistentAccessorError < StandardError
+    def initialize(writeonly, name)
+      type, accessor = writeonly ? [:Write, :getter] : [:Read, :setter]
+      super("#{type} only property with a custom #{accessor}: #{name}")
+    end
+  end
+
   module Bindable
     module ClassMethods
       def bindable(name, options = {})
         name = name.to_s
+        options[:access] ||= :both
         m = BindableAttributeMetadata.new(metadata(name) || name, options)
         bindings_metadata[name] = m
-        define_method name, ->() { get_value(name) } unless options[:access] == :writeonly
-        define_method "#{name}=", ->(value) { set_value(name, value) } unless options[:access] == :readonly
+        raise InconsistentAccessorError.new(true, name)  if options[:access] == :writeonly && options[:getter]
+        raise InconsistentAccessorError.new(false, name) if options[:access] == :readonly && options[:setter]
+
+        define_method name, options[:getter] || ->() { get_value(name) } unless options[:access] == :writeonly
+
+        unless options[:access] == :readonly
+          define_method "#{name}=", options[:setter] || ->(value) { set_value(name, value) }
+        end
         nil
       end
 

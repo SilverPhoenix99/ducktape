@@ -3,7 +3,7 @@ module Ducktape
   # may represent an incompatible implementation with the previous minor version, which should have been
   # represented by a major version number increase.
 
-  VERSION = '0.3.1'
+  VERSION = '0.3.2'
 
   camelize = ->(f){ f.gsub(/(^|_)([^_]+)/) { |_| $2.capitalize } }
 
