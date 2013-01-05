@@ -36,7 +36,8 @@ module Ducktape
         name = name.to_s
         m = bindings_metadata[name]
         return m if m
-        return nil unless superclass.respond_to?(:metadata) && (m = superclass.metadata(name))
+        a = ancestors.find { |a| a != self && a.respond_to?(:metadata) }
+        return nil unless a && (m = a.metadata(name))
         m = m.dup
         bindings_metadata[name] = m
       end
@@ -49,6 +50,12 @@ module Ducktape
 
     def self.included(base)
       base.extend(ClassMethods)
+      return unless base.is_a?(Module)
+      included = base.respond_to?(:included) && base.method(:included)
+      base.define_singleton_method(:included, ->(c) do
+        included.(c) if included
+        c.extend(ClassMethods)
+      end)
     end
 
     def self.extended(_)

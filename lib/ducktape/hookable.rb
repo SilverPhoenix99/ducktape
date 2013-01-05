@@ -40,6 +40,12 @@ module Ducktape
     def self.included(base)
       base.extend(ClassMethods)
       base.def_hook :on_changed unless base.method_defined? :on_changed
+      return unless base.is_a?(Module)
+      included = base.respond_to?(:included) && base.method(:included)
+      base.define_singleton_method(:included, ->(c) do
+        included.(c) if included
+        c.extend(ClassMethods)
+      end)
     end
 
     def self.extended(_)
@@ -73,17 +79,26 @@ module Ducktape
       @hooks ||= Hash.new { |h,k| h[k.to_s] = [] }
     end
 
+    def call_hooks(event, caller = self, parms = {})
+      return unless hooks.has_key?(event.to_s)
+      hooks[event.to_s].each do |hook|
+        hook = caller.method(hook) unless hook.respond_to?(:call)
+        hook.(event, caller, parms)
+      end
+      nil
+    end
+
     # `#call_handlers` is similar to `#call_hooks`,
     # but stops calling other hooks when a hook returns a value other than nil or false.
-    %w'hook handler'.each do |type|
-      define_method("call_#{type}s", ->(event, caller = self, parms = {}) do
-        return unless self.hooks.has_key? event.to_s
-        self.hooks[event.to_s].each do |hook|
-          hook = caller.method(hook) unless hook.respond_to?('call')
-          handled = hook.(event, caller, parms)
-          break handled if type == 'handler' && handled
-        end
-      end)
+    def call_handlers(event, caller = self, parms = {})
+    return unless hooks.has_key?(event.to_s)
+      handled = nil
+      hooks[event.to_s].each do |hook|
+        hook = caller.method(hook) unless hook.respond_to?(:call)
+        handled = hook.(event, caller, parms)
+        break if handled
+      end
+      handled
     end
   end
 end
