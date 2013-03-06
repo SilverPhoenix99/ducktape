@@ -62,32 +62,45 @@ module Ducktape
       raise 'Cannot extend, only include.'
     end
 
-    def unbind_source(attr_name)
-      get_bindable_attr(attr_name).remove_source
-      nil
+    def bindable_attr?(attr_name)
+      !!metadata(attr_name)
     end
 
-    def clear_bindings()
-      bindable_attrs.each { |_, attr| attr.remove_source }
+    def binding(attr_name)
+      return unless bindable_attr?(attr_name)
+      get_bindable_attr(attr_name).binding
+    end
+
+    def clear_bindings(reset = true)
+      bindable_attrs.each { |_, attr| attr.remove_source(reset) }
       nil
     end
 
     def on_changed(attr_name, hook = nil, &block)
       return nil unless block || hook
       get_bindable_attr(attr_name).on_changed(hook, &block)
-      block
+      hook || block
     end
 
-    def unhook_on_changed(attr_name, block)
-      return nil unless block
-      get_bindable_attr(attr_name).remove_hook(:on_changed, block)
-      block
+    def unbind_source(attr_name)
+      get_bindable_attr(attr_name).remove_source
+      nil
+    end
+
+    def unhook_on_changed(attr_name, hook)
+      return nil unless hook
+      get_bindable_attr(attr_name).remove_hook(:on_changed, hook)
+      hook
     end
 
     protected #--------------------------------------------------------------
 
     def get_value(attr_name)
       get_bindable_attr(attr_name).value
+    end
+
+    def metadata(name)
+      is_a?(Class) ? singleton_class.metadata(name) : self.class.metadata(name)
     end
 
     def set_value(attr_name, value)
@@ -101,7 +114,7 @@ module Ducktape
     end
 
     def get_bindable_attr(name)
-      raise AttributeNotDefinedError.new(self.class, name.to_s) unless self.class.metadata(name)
+      raise AttributeNotDefinedError.new(self.class, name.to_s) unless bindable_attr?(name)
       bindable_attrs[name.to_s] ||= BindableAttribute.new(self, name)
     end
   end

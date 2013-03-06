@@ -1,5 +1,3 @@
-autoload :Set, 'set'
-
 module Ducktape
 
   class InvalidAttributeValueError < StandardError
@@ -12,41 +10,37 @@ module Ducktape
 
     include Hookable
 
-    attr_reader :owner    # Bindable
-    attr_reader :name     # String
-    attr_reader :source   # BindingSource
-    attr_reader :value    # Object
-
-    #attr_reader :targets # Hash{ BindableAttribute => BindingSource }
-
-    #def_hook :on_changed
+    attr_reader :owner,         # Bindable
+                :name,          # String
+                :value          # Object
+                #:source        # Link - link between source and target
 
     def initialize(owner, name)
-      @owner, @name, @source, @targets = owner, name.to_s, nil, {}
+      @owner, @name, = owner, name.to_s
+      @source = nil
       reset_value
     end
 
     def metadata
-      @owner.class.metadata(@name)
+      @owner.send(:metadata, @name)
     end
 
     def has_source?
-      !@source.nil?
+      !!@source
     end
 
     def value=(value)
       set_value(value)
     end
 
-    #If values are equal, it means that both attributes share the same value,
-    #if they are different, the values are independent.
-    #As such, self's value is reset if mode is both, or if mode is forward and values are equal;
-    #the source's value is reset of mode is reverse and values are equal.
-    def remove_source
-      return unless has_source?
-      bs, v = detach_source
-      reset_value if bs.mode == :both || (bs.mode == :forward && v == @value)
-      bs
+    #After unbinding the source the value can be reset, or kept.
+    #The default is to reset the target's (self) value.
+    def remove_source(reset = true)
+      return unless @source
+      src, @source = @source, nil
+      src.unbind
+      reset_value if reset
+      src.binding
     end
 
     def reset_value
@@ -59,68 +53,41 @@ module Ducktape
 
     private #----------------------------------------------------------------
 
-    attr_reader :targets
+    def set_value(value)
+      if value.is_a?(BindingSource) #attach new binding source
+        remove_source(false)
+        @source = Link.new(value, self).tap { |l| l.bind }
 
-    def set_value(value, exclusions = Set.new)
-      return if exclusions.include? self
-      exclusions << self
+        unless @source.forward?
+          @source.update_source
+          return @value #value didn't change
+        end
 
-      if value.is_a? BindingSource
-        attach_source(value) #attach new binding source
-        exclusions << @source.source #update value
-        value = @source.source.value #new value is the new source value
+        value = @source.source_value
       end
+
+      return @value if value.equal?(@original_value) || value == @original_value # untransformed value is the same?
+
+      original_value = value
+
+      # transform value
+      m = metadata
+      value = m.coerce(owner, value)
+      raise InvalidAttributeValueError.new(@name, value) unless m.validate(value)
+
+      return @value if value.equal?(@value) || value == @value # transformed value is the same?
 
       #set effective value
-      if @value != value
-        m = metadata
-        value = m.coerce(owner, value)
-        raise InvalidAttributeValueError.new(@name, value) unless m.validate(value)
-        old_value = @value
-        @value = value
+      old_value, @value, @original_value = @value, value, original_value
+      call_hooks(:on_changed, owner, attribute: name.dup, value: @value, old_value: old_value)
 
-        old_value.remove_hook(:on_changed, method(:hookable_value_changed)) if old_value.is_a?(Hookable)
-        @value.on_changed(method(:hookable_value_changed)) if @value.is_a?(Hookable)
+      @source.update_source if @source && @source.reverse?
 
-        call_hooks(:on_changed, owner, attribute: name.dup, value: @value, old_value: old_value)
-      end
-
-      propagate_value(exclusions)
       @value
     end
 
-    def detach_source
-      return unless @source
-      bs = @source
-      v = bs.source.value
-      @source = nil
-      bs.source.send(:targets).delete(self)
-      bs.source.reset_value if bs.mode == :reverse && v == @value
-      [bs, v]
-    end
-
-    # source: BindingSource
-    def attach_source(source)
-      detach_source
-      @source = source
-      source.source.send(:targets)[self] = source
-      nil
-    end
-
-    def targets_to_propagate
-      targets = []
-      targets << @source.source if @source && BindingSource::PROPAGATE_TO_SOURCE.member?(@source.mode)
-      targets.concat(@targets.values.select { |b| BindingSource::PROPAGATE_TO_TARGETS.member?(b.mode) })
-    end
-
-    def propagate_value(exclusions)
-      targets_to_propagate.each { |target| target.send(:set_value, value, exclusions) }
-      nil
-    end
-
-    def hookable_value_changed(*_)
-      call_hooks('on_changed', owner, attribute: name, value: @value)
-      nil
+    def convert(value)
+      value
     end
   end
 end
