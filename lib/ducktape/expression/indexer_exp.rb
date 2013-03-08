@@ -11,7 +11,6 @@ module Ducktape
         @source = WeakReference.new(left.bind(src, :path, qual, root))
         @type = type
         params.each { |param| param.bind(root, :path) }
-        @args = params.map { |param| param.value }
 
         src.on_store(self) if src.is_a?(Hookable) && src.respond_to?(:on_store) #convention hook for []=
 
@@ -19,6 +18,8 @@ module Ducktape
       end
 
       def unbind
+        params.each { |param| param.unbind }
+
         return unless @source
         src = @source.object
         return @source, @type, @qual = nil unless src
@@ -29,7 +30,7 @@ module Ducktape
       end
 
       def call(parms)
-        return unless parms[:args] == @args
+        return unless parms[:args] == params_values
         owner.send("#{@type}_changed")
       end
 
@@ -42,13 +43,11 @@ module Ducktape
       end
 
       def value
-        #TODO validate source
-        @source.object[*@args]
+        source.object[*params_values]
       end
 
       def value=(v)
-        #TODO validate source
-        @source.object[*@args] = v
+        source.object[*params_values] = v
       end
 
       protected
@@ -57,6 +56,10 @@ module Ducktape
         src = @source.object
         raise UnboundError unless src
         src
+      end
+
+      def params_values
+        params.map { |param| param.value }
       end
     end
   end

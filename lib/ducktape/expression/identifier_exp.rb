@@ -44,7 +44,12 @@ module Ducktape
       end
 
       def value
-        src_call
+        src = source
+        case @qual
+          when QualifiedExp then src.const_get(literal)
+          when PropertyExp  then src.public_send(literal)
+          else is_constant?(src) ? src.const_get(literal) : src.public_send(literal)
+        end
       end
 
       def value=(value)
@@ -84,14 +89,6 @@ module Ducktape
           when src.respond_to?(literal) && [-2, -1, 1].include?(src.public_method(literal).arity)
             src.public_send(literal, value)
           else nil # nothing to do
-        end
-      end
-
-      def src_call(src = self.source)
-        case @qual
-          when QualifiedExp then src.const_get(literal)
-          when PropertyExp  then src.public_send(literal)
-          else is_constant?(src) ? src.const_get(literal) : src.public_send(literal)
         end
       end
     end
