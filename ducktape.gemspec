@@ -13,4 +13,5 @@ Gem::Specification.new do |s|
   s.homepage      = 'https://github.com/SilverPhoenix99/ducktape'
   s.require_paths = %w'lib'
   s.files         = Dir['{lib/**/*.rb,*.md}']
+  s.add_dependency 'facets', '~> 2.9'
 end
