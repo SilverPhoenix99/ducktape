@@ -19,6 +19,8 @@ module Ducktape
       def unparse
         literal.inspect
       end
+
+      alias_method :value, :literal
     end
 
     class IntegerExp

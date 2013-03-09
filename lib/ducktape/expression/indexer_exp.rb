@@ -34,6 +34,11 @@ module Ducktape
         owner.send("#{@type}_changed")
       end
 
+      def owner=(o)
+        @owner, left.owner = o, o
+        params.each { |param| param.owner = o }
+      end
+
       def rightmost
         self
       end
@@ -43,11 +48,11 @@ module Ducktape
       end
 
       def value
-        source.object[*params_values]
+        source[*params_values]
       end
 
       def value=(v)
-        source.object[*params_values] = v
+        source[*params_values] = v
       end
 
       protected
