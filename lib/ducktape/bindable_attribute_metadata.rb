@@ -36,7 +36,7 @@ module Ducktape
     end
 
     def default
-      @default.respond_to?('call') ? @default.call : @default
+      @default.respond_to?(:call) ? @default.call : @default
     end
 
     def validation(*options, &block)
@@ -47,9 +47,9 @@ module Ducktape
     def validate(value)
       return true unless @validation
       @validation.each do |v|
-        return true if ( v.is_a?(Class)        && value.is_a?(v) ) ||
-                       ( v.respond_to?('call') && v.(value)      ) ||
-                       ( v.is_a?(Regexp)       && value =~ v     ) ||
+        return true if ( v.is_a?(Class)       && value.is_a?(v) ) ||
+                       ( v.respond_to?(:call) && v.(value)      ) ||
+                       ( v.is_a?(Regexp)      && value =~ v     ) ||
                          value == v
       end
       false

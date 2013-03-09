@@ -1,7 +1,7 @@
 lib = File.expand_path('../lib/', __FILE__)
 $:.unshift lib unless $:.include?(lib)
 
-require 'ducktape'
+require 'ducktape/version'
 
 Gem::Specification.new do |s|
   s.name          = 'ducktape'
@@ -14,4 +14,23 @@ Gem::Specification.new do |s|
   s.require_paths = %w'lib'
   s.files         = Dir['{lib/**/*.rb,*.md}']
   s.add_dependency 'facets', '~> 2.9'
+  s.add_dependency 'whittle', '~> 0.0'
+  s.add_dependency 'ref', '~> 1'
+  s.add_development_dependency 'rspec'
+  s.post_install_message = <<-eos
++----------------------------------------------------------------------------+
+  Thanks for choosing Ducktape.
+
+  ==========================================================================
+  #{Ducktape::VERSION} Changes:
+    - Added path expression to binding sources.
+
+  If you like what you see, support us on Pledgie:
+    http://www.pledgie.com/campaigns/18955
+
+  If you find any bugs, please report them on
+    https://github.com/SilverPhoenix99/ducktape/issues
+
++----------------------------------------------------------------------------+
+  eos
 end

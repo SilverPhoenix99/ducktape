@@ -15,20 +15,10 @@ module Ducktape
   end
 
   def self.hookable(obj)
-    unless obj.is_a? Hookable
-      m = obj.class.ancestors.each do |c|
-        v = @hookable_types[c]
-        break v if v
-      end
-
-      if m
-        (class << obj
-          include Hookable
-          self
-        end).make_hooks(m)
-      end
-    end
-
+    return obj if obj.is_a?(Hookable)
+    m = obj.class.ancestors.each { |c| v = @hookable_types[c]; break v if v }
+    return obj unless m
+    (class << obj; include Hookable; self end).make_hooks(m)
     obj
   end
 
