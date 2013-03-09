@@ -21,16 +21,17 @@ module Ducktape
       reset_value
     end
 
-    def metadata
-      @owner.send(:metadata, @name)
+    def binding_source
+      return unless @source
+      @source.binding_source
     end
 
     def has_source?
       !!@source
     end
 
-    def value=(value)
-      set_value(value)
+    def metadata
+      @owner.send(:metadata, @name)
     end
 
     #After unbinding the source the value can be reset, or kept.
@@ -40,11 +41,15 @@ module Ducktape
       src, @source = @source, nil
       src.unbind
       reset_value if reset
-      src.binding
+      src.binding_source
     end
 
     def reset_value
       set_value(metadata.default)
+    end
+
+    def value=(value)
+      set_value(value)
     end
 
     def to_s

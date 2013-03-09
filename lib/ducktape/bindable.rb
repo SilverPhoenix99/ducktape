@@ -66,9 +66,9 @@ module Ducktape
       !!metadata(attr_name)
     end
 
-    def binding(attr_name)
+    def binding_source(attr_name)
       return unless bindable_attr?(attr_name)
-      get_bindable_attr(attr_name).binding
+      get_bindable_attr(attr_name).binding_source
     end
 
     def clear_bindings(reset = true)
