@@ -1,16 +1,23 @@
 require_relative 'test_helper'
 
-class X
-  class << self
-    include Ducktape::Bindable
-    bindable :x, default: :a
-  end
+include Ducktape
+
+class Names
+  include Bindable
+
+  bindable :names, default: Ducktape.hookable([])
 end
 
-class Y
-  include Ducktape::Bindable
-  bindable :y, default: :b
+class SimpleBindable
+  include Bindable
+
+  bindable :name
 end
 
-p X.x
-p Y.new.y
+src = Names.new
+src.names.push :a, :b, :c
+tgt = SimpleBindable.new
+tgt.name = BindingSource.new(src, 'names[0]')
+src.names[0] = :d
+
+puts tgt.name == :d

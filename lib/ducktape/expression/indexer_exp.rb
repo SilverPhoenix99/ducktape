@@ -8,7 +8,8 @@ module Ducktape
 
       def bind(src, type, qual = nil, root = src)
         unbind
-        @source = WeakReference.new(left.bind(src, :path, qual, root))
+        src = left.bind(src, :path, qual, root)
+        @source = WeakReference.new(src)
         @type = type
         params.each { |param| param.bind(root, :path) }
 
@@ -30,7 +31,9 @@ module Ducktape
       end
 
       def call(parms)
-        return unless parms[:args] == params_values
+        parms = parms.args.dup
+        parms.pop
+        return unless parms == params_values
         owner.send("#{@type}_changed")
       end
 

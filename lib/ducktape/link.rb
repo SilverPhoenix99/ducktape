@@ -24,15 +24,15 @@ module Ducktape
                   :converter,  # Method
                   :mode        # :forward, :reverse, :both
 
-    attr_reader :binding
+    attr_reader :binding_source
 
-    def initialize(binding, target)
-      @binding    = binding
-      @source     = WeakReference.new(binding.source)
-      @expression = Expression::BindingParser.parse(binding.path)
-      @target     = WeakReference.new(target)
-      @converter  = binding.converter
-      @mode       = binding.mode
+    def initialize(binding_source, target)
+      @binding_source = binding_source
+      @source         = WeakReference.new(binding_source.source)
+      @expression     = Expression::BindingParser.parse(binding_source.path)
+      @target         = WeakReference.new(target)
+      @converter      = binding_source.converter
+      @mode           = binding_source.mode
 
       @expression.owner = self
     end
