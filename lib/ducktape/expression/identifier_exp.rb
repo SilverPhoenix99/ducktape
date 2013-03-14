@@ -1,8 +1,7 @@
 module Ducktape
   module Expression
     class IdentifierExp
-      include LiteralExp
-      include Ref #WeakReference
+      include Ref, LiteralExp
 
       def bind(src, type, qual = nil, _ = src)
         unbind
