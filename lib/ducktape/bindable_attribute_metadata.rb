@@ -45,14 +45,7 @@ module Ducktape
     end
 
     def validate(value)
-      return true unless @validation
-      @validation.each do |v|
-        return true if ( v.is_a?(Class)       && value.is_a?(v) ) ||
-                       ( v.respond_to?(:call) && v.(value)      ) ||
-                       ( v.is_a?(Regexp)      && value =~ v     ) ||
-                         value == v
-      end
-      false
+      @validation.nil? || !!(@validation.index { |v| run_validation(v, value) })
     end
 
     def coercion(&block)
@@ -60,7 +53,15 @@ module Ducktape
     end
 
     def coerce(owner, value)
-      @coercion ? @coercion.call(owner, value) : value
+      @coercion ? @coercion.(owner, value) : value
+    end
+
+    private
+    def run_validation(validator, value)
+      ( validator.is_a?(Class)       && value.is_a?(validator) ) ||
+      ( validator.respond_to?(:call) && validator.(value)      ) ||
+      ( validator.is_a?(Regexp)      && value =~ validator     ) ||
+      value == validator
     end
   end
 end

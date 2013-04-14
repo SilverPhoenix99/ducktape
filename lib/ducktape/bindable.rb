@@ -18,16 +18,13 @@ module Ducktape
       def bindable(name, options = {})
         name = name.to_s
         options[:access] ||= :both
-        m = BindableAttributeMetadata.new(metadata(name) || name, options)
-        bindings_metadata[name] = m
+
+        bindings_metadata[name] = BindableAttributeMetadata.new(metadata(name) || name, options)
         raise InconsistentAccessorError.new(true, name)  if options[:access] == :writeonly && options[:getter]
         raise InconsistentAccessorError.new(false, name) if options[:access] == :readonly && options[:setter]
 
-        define_method name, options[:getter] || ->() { get_value(name) } unless options[:access] == :writeonly
-
-        unless options[:access] == :readonly
-          define_method "#{name}=", options[:setter] || ->(value) { set_value(name, value) }
-        end
+        define_method name,       parse_getter(name, options[:getter]) unless options[:access] == :writeonly
+        define_method "#{name}=", parse_setter(name, options[:setter]) unless options[:access] == :readonly
         nil
       end
 
@@ -42,9 +39,27 @@ module Ducktape
         bindings_metadata[name] = m
       end
 
-      protected
+      private
       def bindings_metadata
         @bindings_metadata ||= {}
+      end
+
+      def parse_getter(name, getter)
+        case getter
+          when Proc           then getter
+          when Symbol, String then ->() { send(getter) }
+          when nil            then ->() { get_value(name) }
+          else raise ArgumentError, 'requires a Proc, a Symbol or nil'
+        end
+      end
+
+      def parse_setter(name, setter)
+        case setter
+          when Proc           then setter
+          when Symbol, String then ->(value) { send(setter, value) }
+          when nil            then ->(value) { set_value(name, value) }
+          else raise ArgumentError, 'requires a Proc, a Symbol or nil'
+        end
       end
     end
 
