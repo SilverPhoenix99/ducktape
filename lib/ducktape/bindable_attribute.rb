@@ -48,16 +48,6 @@ module Ducktape
       set_value(metadata.default)
     end
 
-    def value=(value)
-      set_value(value)
-    end
-
-    def to_s
-      "#<#{self.class}:0x#{object_id.to_s(16)} @name=#{name}>"
-    end
-
-    private #----------------------------------------------------------------
-
     def set_value(value)
       if value.is_a?(BindingSource) #attach new binding source
         remove_source(false)
@@ -91,8 +81,8 @@ module Ducktape
       @value
     end
 
-    def convert(value)
-      value
+    def to_s
+      "#<#{self.class}:0x#{object_id.to_s(16)} @name=#{name}>"
     end
   end
 end

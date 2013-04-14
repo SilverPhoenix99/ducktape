@@ -119,7 +119,7 @@ module Ducktape
     end
 
     def set_value(attr_name, value)
-      get_bindable_attr(attr_name).value = value
+      get_bindable_attr(attr_name).set_value(value)
     end
 
     private #----------------------------------------------------------------
