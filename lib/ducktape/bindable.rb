@@ -118,8 +118,8 @@ module Ducktape
       is_a?(Class) ? singleton_class.metadata(name) : self.class.metadata(name)
     end
 
-    def set_value(attr_name, value)
-      get_bindable_attr(attr_name).set_value(value)
+    def set_value(attr_name, value, &block)
+      get_bindable_attr(attr_name).set_value(value, &block)
     end
 
     private #----------------------------------------------------------------
