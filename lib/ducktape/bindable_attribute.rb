@@ -48,17 +48,7 @@ module Ducktape
       set_value(metadata.default)
     end
 
-    def value=(value)
-      set_value(value)
-    end
-
-    def to_s
-      "#<#{self.class}:0x#{object_id.to_s(16)} @name=#{name}>"
-    end
-
-    private #----------------------------------------------------------------
-
-    def set_value(value)
+    def set_value(value, &block)
       if value.is_a?(BindingSource) #attach new binding source
         remove_source(false)
         @source = Link.new(value, self).tap { |l| l.bind }
@@ -84,6 +74,7 @@ module Ducktape
 
       #set effective value
       old_value, @value, @original_value = @value, value, original_value
+      block.(@value) if block
       call_hooks(:on_changed, owner, attribute: name.dup, value: @value, old_value: old_value)
 
       @source.update_source if @source && @source.reverse?
@@ -91,8 +82,8 @@ module Ducktape
       @value
     end
 
-    def convert(value)
-      value
+    def to_s
+      "#<#{self.class}:0x#{object_id.to_s(16)} @name=#{name}>"
     end
   end
 end

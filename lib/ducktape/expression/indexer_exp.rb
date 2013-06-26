@@ -1,8 +1,7 @@
 module Ducktape
   module Expression
     class IndexerExp # left[right+]
-      include BinaryOpExp
-      include Ref
+      include Ref, BinaryOpExp
 
       alias_method :params, :right
 

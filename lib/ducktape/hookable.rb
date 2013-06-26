@@ -98,7 +98,9 @@ module Ducktape
             when Symbol, String then caller.method(hook)
             else hook.method(:call)
           end
-          handled = if hook.arity == 1
+          handled = if hook.arity == 0
+                      hook.()
+                    elsif hook.arity == 1
                       parms2 ||= OpenStruct.new(
                         (parms.is_a?(OpenStruct) ? parms.to_h : parms).merge(event: event, caller: caller))
                       hook.(parms2)
