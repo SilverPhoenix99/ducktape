@@ -24,11 +24,7 @@ Gem::Specification.new do |s|
 
   ==========================================================================
   #{Ducktape::VERSION} Changes:
-    - This version is compatible with version 0.3.x.
     - Added path expression to binding sources.
-
-  If you like what you see, support us on Pledgie:
-    http://www.pledgie.com/campaigns/18955
 
   If you find any bugs, please report them on
     https://github.com/SilverPhoenix99/ducktape/issues
