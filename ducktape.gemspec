@@ -1,7 +1,4 @@
-lib = File.expand_path('../lib/', __FILE__)
-$:.unshift lib unless $:.include?(lib)
-
-require 'ducktape/version'
+require_relative 'lib/ducktape/version'
 
 Gem::Specification.new do |s|
   s.name          = 'ducktape'
@@ -14,7 +11,7 @@ Gem::Specification.new do |s|
   s.homepage      = 'https://github.com/SilverPhoenix99/ducktape'
   s.require_paths = %w'lib'
   s.files         = Dir['{lib/**/*.rb,*.md}']
-  s.add_dependency 'facets', '~> 2.9'
+  s.add_dependency 'facets', '~> 3'
   s.add_dependency 'whittle', '~> 0.0'
   s.add_dependency 'ref', '~> 1'
   s.add_development_dependency 'rspec'

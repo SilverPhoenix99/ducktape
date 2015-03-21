@@ -1,6 +1,7 @@
 %w'
   set
   facets/ostruct
+  facets/array/extract_options
   ref
   whittle
 '.each { |f| require f }
@@ -21,6 +22,5 @@
   bindable_attribute_metadata
   bindable_attribute
   bindable
-'.each { |f| require "ducktape/#{f}" }
-
-%w'def_hookable'.each { |f| require "ext/#{f}" }
+  ext/def_hookable
+'.each { |f| require_relative "ducktape/#{f}" }

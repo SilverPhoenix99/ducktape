@@ -12,30 +12,26 @@ class X
   end
 end
 
-describe Expression::IdentifierExp do
-  before :all do
+RSpec.describe Expression::IdentifierExp do
+  before do
     @src = X.new('abc')
     @tgt = X.new
   end
 
   describe 'both binding' do
-    before :all do
+    before do
       @tgt.name = BindingSource.new(@src, :name)
-    end
-
-    it "should have 'cde' for name" do
       @src.name = 'cde'
-      @tgt.name.should == 'cde'
     end
 
-    it 'should have equal names' do
-      @src.name = 'xyz'
-      @tgt.name.should == @src.name
-    end
+    it { @tgt.name.should == 'cde' }
+
+    it { @tgt.name.should == @src.name }
+
   end
 
   describe 'forward binding' do
-    before :all do
+    before do
       @tgt.name = BindingSource.new(@src, :name, :forward)
     end
 
