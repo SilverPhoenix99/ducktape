@@ -14,14 +14,16 @@ Gem::Specification.new do |s|
   s.add_dependency 'facets', '~> 3'
   s.add_dependency 'whittle', '~> 0.0'
   s.add_dependency 'ref', '~> 1'
-  s.add_development_dependency 'rspec'
+  s.add_development_dependency 'rspec', '~> 3'
   s.post_install_message = <<-eos
 +----------------------------------------------------------------------------+
   Thank you for choosing Ducktape.
 
   ==========================================================================
   #{Ducktape::VERSION} Changes:
-    - Added path expression to binding sources.
+    - Added Bindable::bind method to wrap BindingSource construction.
+    - Added support for Range validation in bindable attributes.
+    - Internal refactorings.
 
   If you find any bugs, please report them on
     https://github.com/SilverPhoenix99/ducktape/issues
