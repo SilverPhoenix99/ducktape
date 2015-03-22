@@ -66,7 +66,7 @@ module Ducktape
 
     def update_target
       assert_mode :set, :target, :forward
-      @target.object.value = source_value
+      @target.object.set_value source_value
     end
 
     def source_value

@@ -12,61 +12,78 @@ class X
   end
 end
 
-RSpec.describe Expression::IdentifierExp do
-  before do
-    @src = X.new('abc')
-    @tgt = X.new
-  end
+RSpec.instance_eval do
 
-  describe 'both binding' do
-    before do
-      @tgt.name = BindingSource.new(@src, :name)
-      @src.name = 'cde'
+  describe Expression::IdentifierExp do
+
+    let(:src) { X.new('abc') }
+    let(:tgt) { X.new }
+
+    subject { tgt }
+
+    describe 'both binding' do
+      before do
+        tgt.name = BindingSource.new(src, :name)
+        src.name = 'cde'
+      end
+
+      it { should have_attributes(name: 'cde') }
+      it { should have_attributes(name: src.name) }
     end
 
-    it { @tgt.name.should == 'cde' }
+    describe 'forward binding' do
+      before do
+        tgt.name = BindingSource.new(src, :name, :forward)
+      end
 
-    it { @tgt.name.should == @src.name }
+      subject { tgt }
 
-  end
+      describe do
+        before do
+          src.name = 'abc'
+          tgt.name = 'aabb'
+        end
 
-  describe 'forward binding' do
-    before do
-      @tgt.name = BindingSource.new(@src, :name, :forward)
+        it { should have_attributes(name: 'aabb') }
+        it { should_not have_attributes(name: src.name) }
+      end
+
+      describe do
+        before do
+          tgt.name = 'xxyy'
+          src.name = 'cde'
+        end
+
+        it { should have_attributes(name: 'cde') }
+        it { should have_attributes(name: src.name) }
+      end
     end
 
-    it 'should have different names' do
-      @src.name = 'abc'
-      @tgt.name = 'aabb'
-      @tgt.name.should == 'aabb'
-      @tgt.name.should_not == @src.name
-    end
+    describe 'reverse binding' do
+      before do
+        tgt.name = Ducktape::BindingSource.new(src, :name, :reverse)
+      end
 
-    it 'should have equal names' do
-      @tgt.name = 'xxyy'
-      @src.name = 'cde'
-      @tgt.name.should == 'cde'
-      @tgt.name.should == @src.name
-    end
-  end
+      describe do
+        before do
+          tgt.name = 'qwer'
+          src.name = 'mno'
+        end
 
-  describe 'reverse binding' do
-    before :all do
-      @tgt.name = Ducktape::BindingSource.new(@src, :name, :reverse)
-    end
+        it { should have_attributes(name: 'qwer') }
+        it { should_not have_attributes(name: src.name) }
+      end
 
-    it 'should have different names' do
-      @tgt.name = 'qwer'
-      @src.name = 'mno'
-      @tgt.name.should == 'qwer'
-      @tgt.name.should_not == @src.name
-    end
+      describe do
+        before do
+          src.name = 'rfv'
+          tgt.name = 'cdd'
+        end
 
-    it 'should have equal names' do
-      @src.name = 'rfv'
-      @tgt.name = 'cdd'
-      @src.name.should == 'cdd'
-      @tgt.name.should == @src.name
+        it { should have_attributes(name: 'cdd') }
+        it { should have_attributes(name: src.name) }
+      end
     end
   end
 end
+

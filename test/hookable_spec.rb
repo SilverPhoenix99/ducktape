@@ -4,12 +4,6 @@ include Ducktape
 
 RSpec.instance_eval do
 
-  configure do |config|
-    config.expect_with :rspec do |c|
-      c.syntax = :expect
-    end
-  end
-
   shared_examples_for 'a hookable module' do |obj|
     subject &obj
     it { should     respond_to(:included) }

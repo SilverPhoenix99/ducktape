@@ -82,7 +82,7 @@ module Ducktape
       def property_set(src, value)
         case
           when src.is_a?(Bindable) && src.bindable_attr?(literal)
-            src.send(:get_bindable_attr, literal).value = value
+            src.send(:get_bindable_attr, literal).set_value value
           when src.respond_to?("#{literal}=")
             src.public_send("#{literal}=", value)
           when src.respond_to?(literal) && [-2, -1, 1].include?(src.public_method(literal).arity)
