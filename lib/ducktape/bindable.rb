@@ -17,54 +17,52 @@ module Ducktape
     module ClassMethods
       def bindable(name, options = {})
         name = name.to_s
-        options[:access] ||= :both
-
-        bindings_metadata[name] = BindableAttributeMetadata.new(metadata(name) || name, options)
-        raise InconsistentAccessorError.new(true, name)  if options[:access] == :writeonly && options[:getter]
-        raise InconsistentAccessorError.new(false, name) if options[:access] == :readonly && options[:setter]
-
-        define_method name,       parse_getter(name, options[:getter]) unless options[:access] == :writeonly
-        define_method "#{name}=", parse_setter(name, options[:setter]) unless options[:access] == :readonly
+        bindings_metadata[name] = metadata = BindableAttributeMetadata.new(metadata(name) || name, options)
+        define_getter metadata
+        define_setter metadata
         nil
       end
 
-      #TODO improve metadata search
       def metadata(name)
         name = name.to_s
-        m = bindings_metadata[name]
-        return m if m
-        a = ancestors.find { |a| a != self && a.respond_to?(:metadata) }
-        return nil unless a && (m = a.metadata(name))
-        m = m.dup
-        bindings_metadata[name] = m
+
+        meta = ancestors.find do |ancestor|
+          bindings = ancestor.instance_variable_get(:@bindings_metadata)
+          meta = bindings && bindings[name]
+          break meta if meta
+        end
+
+        return unless meta
+        bindings_metadata[name] = meta
       end
 
       private
-      def bindings_metadata
-        @bindings_metadata ||= {}
-      end
 
-      def parse_getter(name, getter)
-        case getter
-          when Proc           then getter
-          when Symbol, String then ->() { send(getter) }
-          when nil            then ->() { get_value(name) }
-          else raise ArgumentError, 'requires a Proc, a Symbol or nil'
+        def bindings_metadata
+          @bindings_metadata ||= {}
         end
-      end
 
-      def parse_setter(name, setter)
-        case setter
-          when Proc           then setter
-          when Symbol, String then ->(value) { send(setter, value) }
-          when nil            then ->(value) { set_value(name, value) }
-          else raise ArgumentError, 'requires a Proc, a Symbol or nil'
+        def define_getter(metadata)
+          if metadata.access == :writeonly
+            raise InconsistentAccessorError.new(true, @name) if metadata.getter
+            return
+          end
+
+          define_method metadata.name, metadata.getter_proc
         end
-      end
+
+        def define_setter(metadata)
+          if metadata.access == :readonly
+            raise InconsistentAccessorError.new(false, @name) if metadata.setter
+            return
+          end
+
+          define_method "#{metadata.name}=", metadata.setter_proc
+        end
     end
 
     def self.included(base)
-      base.extend(ClassMethods)
+      base.extend ClassMethods
       return unless base.is_a?(Module)
       included = base.respond_to?(:included) && base.method(:included)
       base.define_singleton_method(:included, ->(c) do
@@ -108,29 +106,27 @@ module Ducktape
       hook
     end
 
-    protected #--------------------------------------------------------------
+    private #--------------------------------------------------------------
 
-    def get_value(attr_name)
-      get_bindable_attr(attr_name).value
-    end
+      def get_value(attr_name)
+        get_bindable_attr(attr_name).value
+      end
 
-    def metadata(name)
-      is_a?(Class) ? singleton_class.metadata(name) : self.class.metadata(name)
-    end
+      def metadata(name)
+        is_a?(Class) ? singleton_class.metadata(name) : self.class.metadata(name)
+      end
 
-    def set_value(attr_name, value, &block)
-      get_bindable_attr(attr_name).set_value(value, &block)
-    end
+      def set_value(attr_name, value, &block)
+        get_bindable_attr(attr_name).set_value(value, &block)
+      end
 
-    private #----------------------------------------------------------------
+      def bindable_attrs
+        @bindable_attrs ||= {}
+      end
 
-    def bindable_attrs
-      @bindable_attrs ||= {}
-    end
-
-    def get_bindable_attr(name)
-      raise AttributeNotDefinedError.new(self.class, name.to_s) unless bindable_attr?(name)
-      bindable_attrs[name.to_s] ||= BindableAttribute.new(self, name)
-    end
+      def get_bindable_attr(name)
+        raise AttributeNotDefinedError.new(self.class, name.to_s) unless bindable_attr?(name)
+        bindable_attrs[name.to_s] ||= BindableAttribute.new(self, name)
+      end
   end
 end

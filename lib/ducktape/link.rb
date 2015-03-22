@@ -4,20 +4,6 @@ module Ducktape
 
     class ModeError < StandardError; end
 
-    class << self
-      def cleanup(*method_names)
-        method_names.each do |method_name|
-          m = instance_method(method_name)
-          define_method(method_name, ->(*args, &block) do
-            return m.bind(self).(*args, &block) unless broken?
-            unbind if @expression
-            @target.object.remove_source if @target && @target.object
-            @source, @target, @expression = nil
-          end)
-        end
-      end
-    end
-
     attr_accessor :source,     # WeakRef of Object
                   :expression, # Expression (e.g.: 'a::X.b[c,d]')
                   :target,     # WeakRef of BindingAttribute
@@ -50,52 +36,58 @@ module Ducktape
     end
 
     def bind
-      @expression.bind(@source.object, :value)
+      with_cleanup { @expression.bind(@source.object, :value) }
       nil
     end
 
     def unbind
-      @expression.unbind
+      with_cleanup { @expression.unbind }
       nil
     end
 
     def update_source
       assert_mode :set, :source, :reverse
-      @expression.value = target_value
+      with_cleanup { @expression.value = target_value }
     end
 
     def update_target
       assert_mode :set, :target, :forward
-      @target.object.set_value source_value
+      with_cleanup { @target.object.set_value source_value }
     end
 
     def source_value
       assert_mode :get, :source, :forward
-      @converter.convert(@expression.value)
+      with_cleanup { @converter.convert(@expression.value) }
     end
 
     def target_value
       assert_mode :get, :target, :reverse
-      @converter.revert(@target.object.value)
+      with_cleanup { @converter.revert(@target.object.value) }
     end
-
-    cleanup :bind, :unbind, :update_source, :update_target, :source_value, :target_value
 
     private
-    def assert_mode(accessor, type, mode)
-      raise ModeError, "cannot #{accessor} #{type} value on a non #{mode} link" unless public_send("#{mode}?")
-    end
 
-    def path_changed
-      bind
-      forward? ? update_target : update_source
-      nil
-    end
+      def assert_mode(accessor, type, mode)
+        raise ModeError, "cannot #{accessor} #{type} value on a non #{mode} link" unless public_send("#{mode}?")
+      end
 
-    def value_changed
-      return unless forward?
-      update_target
-      nil
-    end
+      def path_changed
+        bind
+        forward? ? update_target : update_source
+        nil
+      end
+
+      def value_changed
+        return unless forward?
+        update_target
+        nil
+      end
+
+      def with_cleanup
+        return yield unless broken?
+        unbind if @expression
+        @target.object.remove_source if @target && @target.object
+        @source, @target, @expression = nil
+      end
   end
 end

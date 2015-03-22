@@ -19,6 +19,11 @@
   converter
   link
   binding_source
+  validators/class_validator
+  validators/proc_validator
+  validators/regexp_validator
+  validators/range_validator
+  validators/equality_validator
   bindable_attribute_metadata
   bindable_attribute
   bindable

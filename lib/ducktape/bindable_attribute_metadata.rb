@@ -1,6 +1,8 @@
 module Ducktape
   class BindableAttributeMetadata
 
+    @validators = [ ClassValidator, ProcValidator, RegexpValidator, RangeValidator ]
+
     VALID_OPTIONS = [:access, :coerce, :default, :getter, :setter, :validate].freeze
 
     attr_reader :name, :access, :getter, :setter
@@ -8,27 +10,21 @@ module Ducktape
     def initialize(name, options = {})
 
       options.keys.reject { |k| VALID_OPTIONS.member?(k) }.
-        each { |k| puts "WARNING: invalid option #{k.inspect} for #{name.inspect} attribute. Will be ignored." }
+        each { |k| $stderr.puts "WARNING: invalid option #{k.inspect} for #{name.inspect} attribute. Will be ignored." }
 
-      if name.is_a? BindableAttributeMetadata
-        @name       = name.name
-        @default    = options.has_key?(:default) ? options[:default] : name.instance_variable_get(:@default)
-        @validation = options.has_key?(:validate) ? options[:validate] : name.instance_variable_get(:@validation)
-        @coercion   = options.has_key?(:coerce) ? options[:coerce] : name.instance_variable_get(:@coercion)
-        @access     = options.has_key?(:access) ? options[:access] : name.access
-        @getter     = options.has_key?(:getter) ? options[:getter] : name.getter
-        @setter     = options.has_key?(:setter) ? options[:setter] : name.setter
+      if name.is_a?(BindableAttributeMetadata)
+        @name   = name.name
+        options = name.send(:as_options).merge!(options)
       else
-        @name       = name
-        @default    = options[:default]
-        @validation = options[:validate]
-        @coercion   = options[:coerce]
-        @access     = options[:access]
-        @getter     = options[:getter]
-        @setter     = options[:setter]
+        @name = name
       end
 
-      @validation = [*@validation] unless @validation.nil?
+      @default    = options[:default]
+      @validation = validation(*options[:validate])
+      @coercion   = options[:coerce] || ->(_owner, value) { value }
+      @access     = options[:access] || :both
+      @getter     = options[:getter]
+      @setter     = options[:setter]
     end
 
     def default=(value)
@@ -39,13 +35,29 @@ module Ducktape
       @default.respond_to?(:call) ? @default.call : @default
     end
 
-    def validation(*options, &block)
-      options << block
-      @validation = options
+    def getter_proc
+      self.class.getter_proc(@getter, @name)
+    end
+
+    def setter_proc
+      self.class.setter_proc(@setter, @name)
+    end
+
+    def validation(*validators, &block)
+      validators << block if block
+      class_validators = Set.new(self.class.instance_variable_get(:@validators).values)
+      @validation = validators.map do |validator|
+        class_validators.include?(validator.class) ? validator : self.class.create_validator(validator)
+      end
+    end
+
+    def valid?(value)
+      @validation.any? { |validator| validator.validate(value) }
     end
 
     def validate(value)
-      @validation.nil? || !!(@validation.index { |v| run_validation(v, value) })
+      raise InvalidAttributeValueError.new(@name, value) unless valid?(value)
+      value
     end
 
     def coercion(&block)
@@ -56,12 +68,44 @@ module Ducktape
       @coercion ? @coercion.(owner, value) : value
     end
 
-    private
-    def run_validation(validator, value)
-      ( validator.is_a?(Class)       && value.is_a?(validator) ) ||
-      ( validator.respond_to?(:call) && validator.(value)      ) ||
-      ( validator.is_a?(Regexp)      && value =~ validator     ) ||
-      value == validator
+    def self.register_validator(validator_class)
+      @validators << validator_class
     end
+
+    private
+
+      def as_options
+        {
+          default:  @default,
+          validate: @validation,
+          coerce:   @coercion,
+          access:   @access,
+          getter:   @getter,
+          setter:   @setter
+        }
+      end
+
+      def self.create_validator(validator)
+        validator_class = @validators.find { |validator_class| validator_class.(validator) } || EqualityValidator
+        validator_class.new(validator)
+      end
+
+      def self.getter_proc(getter, name)
+        case getter
+          when Proc           then getter
+          when Symbol, String then ->() { send(getter) }
+          when nil            then ->() { get_value(name) }
+          else raise ArgumentError, 'requires a Proc, a Symbol or nil'
+        end
+      end
+
+      def self.setter_proc(setter, name)
+        case setter
+          when Proc           then setter
+          when Symbol, String then ->(value) { send(setter, value) }
+          when nil            then ->(value) { set_value(name, value) }
+          else raise ArgumentError, 'requires a Proc, a Symbol or nil'
+        end
+      end
   end
 end

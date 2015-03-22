@@ -24,33 +24,40 @@ class Person
   end
 end
 
-describe Expression::PropertyExp do
-  before :each do
-    @addr1 = Address.new.tap do |a|
-      a.street = 'abc'
-      a.po_box = 123
+RSpec.instance_eval do
+  describe Expression::PropertyExp do
+
+    let(:addr1) do
+      Address.new.tap do |a|
+        a.street = 'abc'
+        a.po_box = 123
+      end
     end
 
-    @addr2 = Address.new.tap do |b|
-      b.street = 'cde'
-      b.po_box = 456
+    let(:addr2) do
+      Address.new.tap do |b|
+        b.street = 'cde'
+        b.po_box = 456
+      end
     end
 
-    @person = Person.new.tap do |p|
-      p.name = 'xyz'
-      p.address = @addr1
+    let(:person) do
+      Person.new.tap do |p|
+        p.name = 'xyz'
+        p.address = addr1
+      end
     end
-  end
 
+    describe do
+      before { addr2.street = BindingSource.new(person, 'address.street') }
 
-  it 'should have equal streets' do
-    @addr2.street = BindingSource.new(@person, 'address.street')
-    @addr2.street.should == @addr1.street
-  end
+      specify { expect(addr2.street).to be == addr1.street }
 
-  it 'should propagate to source' do
-    @addr2.street = BindingSource.new(@person, 'address.street')
-    @addr2.street = 'foo bar'
-    @addr1.street.should == 'foo bar'
+      describe 'propagates to source' do
+        before { addr2.street = 'foo bar' }
+
+        specify { expect(addr1.street).to be == 'foo bar' }
+      end
+    end
   end
 end
