@@ -22,15 +22,19 @@ class Y
   bindable :name
 end
 
-describe Expression::QualifiedExp do
-  before :all do
-    @y = Y.new
+RSpec.instance_eval do
+
+  describe Expression::QualifiedExp do
+    let(:y) { Y.new }
+
+    subject { y }
+
+    it 'should have equal names' do
+      x = NS::M::X.new
+      y.bind :name, x.ns, 'M::X.name'
+      NS::M::X.name = 'abc'
+      should have_attributes(name: 'abc')
+    end
   end
 
-  it 'should have equal names' do
-    x = NS::M::X.new
-    @y.name = BindingSource.new(x.ns, 'M::X.name')
-    NS::M::X.name = 'abc'
-    @y.name.should == 'abc'
-  end
 end

@@ -75,6 +75,10 @@ module Ducktape
       raise 'Cannot extend, only include.'
     end
 
+    def bind(attr_name, *args)
+      send "#{attr_name}=", BindingSource.new(*args)
+    end
+
     def bindable_attr?(attr_name)
       !!metadata(attr_name)
     end

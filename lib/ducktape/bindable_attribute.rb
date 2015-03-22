@@ -84,6 +84,7 @@ module Ducktape
         metadata = self.metadata
         value = metadata.coerce(owner, value)
         metadata.validate(value)
+        value
       end
   end
 end

@@ -14,24 +14,32 @@ class SimpleBindable
   bindable :name
 end
 
-describe Expression::IndexerExp do
-  it 'should have the same name' do
-    src = Names.new
-    src.names.push :a, :b, :c
-    tgt = SimpleBindable.new
+RSpec.instance_eval do
 
-    tgt.name = BindingSource.new(src, 'names[0]')
+  describe Expression::IndexerExp do
 
-    tgt.name.should == :a
+    let(:src) do
+      Names.new.tap do |src|
+        src.names.push :a, :b, :c
+      end
+    end
+
+    let(:tgt) do
+      SimpleBindable.new.tap do |tgt|
+        tgt.bind :name, src, 'names[0]'
+      end
+    end
+
+    subject { tgt }
+
+    it { should have_attributes(name: :a) }
+
+    describe 'update' do
+      it do
+        src.names[0] = :d
+        should have_attributes(name: :d)
+      end
+    end
   end
 
-  it 'should have update the name' do
-    src = Names.new
-    src.names.push :a, :b, :c
-    tgt = SimpleBindable.new
-    tgt.name = BindingSource.new(src, 'names[0]')
-    src.names[0] = :d
-
-    tgt.name.should == :d
-  end
 end

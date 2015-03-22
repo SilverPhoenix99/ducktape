@@ -4,8 +4,7 @@ module Ducktape
 
   def self.def_hookable(klass, *args)
     return if args.length == 0
-
-    names_hash = args.last.is_a?(Hash) ? args.pop : {}
+    names_hash = args.extract_options!
 
     # reversed merge because names_hash has priority
     @hookable_types[klass] = Hash[args.flatten.map { |v| [v, v] }].merge!(names_hash)
@@ -17,7 +16,8 @@ module Ducktape
     return obj if obj.is_a?(Hookable)
     m = obj.class.ancestors.find { |c| @hookable_types.has_key?(c) }
     return obj unless m
-    (class << obj; include Hookable; self end).make_hooks(m)
+    obj.singleton_class.send :include, Hookable
+    obj.singleton_class.make_hooks(@hookable_types[m])
     obj
   end
 

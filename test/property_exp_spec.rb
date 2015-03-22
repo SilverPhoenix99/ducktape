@@ -25,6 +25,7 @@ class Person
 end
 
 RSpec.instance_eval do
+
   describe Expression::PropertyExp do
 
     let(:addr1) do
@@ -49,7 +50,7 @@ RSpec.instance_eval do
     end
 
     describe do
-      before { addr2.street = BindingSource.new(person, 'address.street') }
+      before { addr2.bind :street, person, 'address.street' }
 
       specify { expect(addr2.street).to be == addr1.street }
 
@@ -60,4 +61,5 @@ RSpec.instance_eval do
       end
     end
   end
+
 end

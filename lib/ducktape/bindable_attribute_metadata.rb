@@ -45,19 +45,18 @@ module Ducktape
 
     def validation(*validators, &block)
       validators << block if block
-      class_validators = Set.new(self.class.instance_variable_get(:@validators).values)
+      class_validators = Set.new(self.class.instance_variable_get(:@validators))
       @validation = validators.map do |validator|
         class_validators.include?(validator.class) ? validator : self.class.create_validator(validator)
       end
     end
 
     def valid?(value)
-      @validation.any? { |validator| validator.validate(value) }
+      @validation.empty? || @validation.any? { |validator| validator.validate(value) }
     end
 
     def validate(value)
       raise InvalidAttributeValueError.new(@name, value) unless valid?(value)
-      value
     end
 
     def coercion(&block)
@@ -86,7 +85,7 @@ module Ducktape
       end
 
       def self.create_validator(validator)
-        validator_class = @validators.find { |validator_class| validator_class.(validator) } || EqualityValidator
+        validator_class = @validators.find { |validator_class| validator_class.matches?(validator) } || EqualityValidator
         validator_class.new(validator)
       end
 

@@ -23,7 +23,7 @@ RSpec.instance_eval do
 
     describe 'both binding' do
       before do
-        tgt.name = BindingSource.new(src, :name)
+        tgt.bind :name, src, :name
         src.name = 'cde'
       end
 
@@ -33,7 +33,7 @@ RSpec.instance_eval do
 
     describe 'forward binding' do
       before do
-        tgt.name = BindingSource.new(src, :name, :forward)
+        tgt.bind :name, src, :name, :forward
       end
 
       subject { tgt }
@@ -61,7 +61,7 @@ RSpec.instance_eval do
 
     describe 'reverse binding' do
       before do
-        tgt.name = Ducktape::BindingSource.new(src, :name, :reverse)
+        tgt.bind :name, src, :name, :reverse
       end
 
       describe do
