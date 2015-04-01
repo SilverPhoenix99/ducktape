@@ -10,7 +10,7 @@
 
 ## DESCRIPTION:
 
-A [truly outrageous](http://youtu.be/dSPb56-_I98) gem for bindable attributes and event notification.
+A [truly outrageous](https://youtu.be/lkQE5wuBFeY8) gem for bindable attributes and event notification.
 
 ## SYNOPSIS:
 
