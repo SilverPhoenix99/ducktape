@@ -3,5 +3,5 @@
 # which should have been represented by a major version number increase.
 
 module Ducktape
-  VERSION = '0.5.0'.freeze
+  VERSION = '0.5.1'.freeze
 end

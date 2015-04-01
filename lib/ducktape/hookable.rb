@@ -1,9 +1,10 @@
 module Ducktape
   module Hookable
     def self.included(base)
+      base.extend ClassMethods
+
       if base.is_a?(Class)
         base.include InstanceMethods
-        base.extend  ClassMethods
         base.def_hook(:on_changed) unless base.method_defined?(:on_changed)
         return
       end
@@ -90,12 +91,12 @@ module Ducktape
           define_method(original_method.name) do |*args, &block|
             bound_method = original_method.bind(self)
             result = bound_method.(*args, &block)
-            params = OpenStruct.new(args: args, result: result)
+            params = OpenStruct.new(args: args, method: original_method.name, result: result)
             call_name = "call_#{ type }s"
-            result = send(call_name, hook_name, original_method.name, params)
-            unless result && type == :handler
+            hook_result = send(call_name, hook_name, self, params)
+            unless hook_result && type == :handler
               # invoke if previous call is false or nil
-              send call_name, :on_changed, original_method.name, params
+              send call_name, :on_changed, self, params
             end
             result
           end

@@ -12,16 +12,16 @@ module Ducktape
       options.keys.reject { |k| VALID_OPTIONS.member?(k) }.
         each { |k| $stderr.puts "WARNING: invalid option #{k.inspect} for #{name.inspect} attribute. Will be ignored." }
 
-      if name.is_a?(BindableAttributeMetadata)
-        @name   = name.name
-        options = name.send(:as_options).merge!(options)
-      else
-        @name = name
-      end
+      @name = if name.is_a?(BindableAttributeMetadata)
+                options = name.send(:as_options).merge!(options)
+                name.name
+              else
+                name
+              end
 
       @default    = options[:default]
       @validation = validation(*options[:validate])
-      @coercion   = options[:coerce] || ->(_owner, value) { value }
+      @coercion   = options[:coerce]
       @access     = options[:access] || :both
       @getter     = options[:getter]
       @setter     = options[:setter]
@@ -59,8 +59,9 @@ module Ducktape
       raise InvalidAttributeValueError.new(@name, value) unless valid?(value)
     end
 
-    def coercion(&block)
-      @coercion = block
+    def coercion(proc_obj = nil, &block)
+      raise ArgumentError, 'Expected only a parameter or a block, but both were passed.' if proc_obj && block
+      @coercion = block || proc_obj
     end
 
     def coerce(owner, value)
@@ -68,7 +69,7 @@ module Ducktape
     end
 
     def self.register_validator(validator_class)
-      @validators << validator_class
+      @validators.unshift validator_class
     end
 
     private

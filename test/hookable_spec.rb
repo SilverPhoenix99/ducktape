@@ -6,12 +6,12 @@ RSpec.instance_eval do
 
   shared_examples_for 'a hookable module' do |obj|
     subject &obj
-    it { should     respond_to(:included) }
+    it { should respond_to(:included) }
 
-    it { should_not respond_to(:def_hook) }
-    it { should_not respond_to(:def_hooks) }
-    it { should_not respond_to(:make_hooks) }
-    it { should_not respond_to(:make_handlers) }
+    it { should respond_to(:def_hook) }
+    it { should respond_to(:def_hooks) }
+    it { should respond_to(:make_hooks) }
+    it { should respond_to(:make_handlers) }
 
     it { should_not have_instance_method(:add_hook) }
     it { should_not have_instance_method(:remove_hook) }

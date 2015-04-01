@@ -76,7 +76,7 @@ module Ducktape
     end
 
     def bind(attr_name, *args)
-      send "#{attr_name}=", BindingSource.new(*args)
+      BindingSource.new(*args).tap { |source| send "#{attr_name}=", source }
     end
 
     def bindable_attr?(attr_name)
