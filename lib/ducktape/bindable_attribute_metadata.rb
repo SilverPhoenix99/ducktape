@@ -1,7 +1,7 @@
 module Ducktape
   class BindableAttributeMetadata
 
-    @validators = [ ClassValidator, ProcValidator, RegexpValidator, RangeValidator ]
+    @validators = [ ClassValidator, ProcValidator, RegexpValidator, RangeValidator, EqualityValidator ]
 
     VALID_OPTIONS = [:access, :coerce, :default, :getter, :setter, :validate].freeze
 
@@ -86,7 +86,7 @@ module Ducktape
       end
 
       def self.create_validator(validator)
-        validator_class = @validators.find { |validator_class| validator_class.matches?(validator) } || EqualityValidator
+        validator_class = @validators.find { |validator_class| validator_class.matches?(validator) }
         validator_class.new(validator)
       end
 

@@ -2,22 +2,24 @@ require_relative 'test_helper'
 
 include Ducktape
 
-class X
-  include Bindable
-
-  bindable :name, validate: [String, nil]
-
-  def initialize(name = nil)
-    self.name = name
-  end
-end
-
 RSpec.instance_eval do
 
   describe Expression::IdentifierExp do
 
-    let(:src) { X.new('abc') }
-    let(:tgt) { X.new }
+    let(:Foo) do
+      Class.new do
+        include Bindable
+
+        bindable :name, validate: [String, nil]
+
+        def initialize(name = nil)
+          self.name = name
+        end
+      end
+    end
+
+    let(:src) { Foo().new('abc') }
+    let(:tgt) { Foo().new }
 
     subject { tgt }
 

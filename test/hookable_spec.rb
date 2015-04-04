@@ -4,23 +4,8 @@ include Ducktape
 
 RSpec.instance_eval do
 
-  shared_examples_for 'a hookable module' do |obj|
+  shared_examples_for 'a hookable' do |obj|
     subject &obj
-    it { should respond_to(:included) }
-
-    it { should respond_to(:def_hook) }
-    it { should respond_to(:def_hooks) }
-    it { should respond_to(:make_hooks) }
-    it { should respond_to(:make_handlers) }
-
-    it { should_not have_instance_method(:add_hook) }
-    it { should_not have_instance_method(:remove_hook) }
-    it { should_not have_instance_method(:clear_hooks) }
-  end
-
-  shared_examples_for 'a hookable class' do |obj|
-    subject &obj
-    it { should_not respond_to(:included) }
 
     it { should respond_to(:def_hook) }
     it { should respond_to(:def_hooks) }
@@ -30,6 +15,20 @@ RSpec.instance_eval do
     it { should have_instance_method(:add_hook) }
     it { should have_instance_method(:remove_hook) }
     it { should have_instance_method(:clear_hooks) }
+  end
+
+  shared_examples_for 'a hookable module' do |obj|
+    subject &obj
+    it { should respond_to(:included) }
+
+    it_behaves_like 'a hookable', obj
+  end
+
+  shared_examples_for 'a hookable class' do |obj|
+    subject &obj
+    it { should_not respond_to(:included) }
+
+    it_behaves_like 'a hookable', obj
   end
 
   describe Hookable do
