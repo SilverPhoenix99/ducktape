@@ -1,6 +1,10 @@
 # ducktape
 
-* https://github.com/SilverPhoenix99/ducktape
+[![Gem Version](http://img.shields.io/gem/v/ducktape.svg)](https://rubygems.org/gems/ducktape)
+[![Downloads](https://img.shields.io/gem/dt/ducktape.svg)](https://rubygems.org/gems/ducktape)
+
+* [On github](https://github.com/SilverPhoenix99/ducktape)
+* [On rubygems](https://rubygems.org/gems/ducktape)
 
 <a href='http://www.pledgie.com/campaigns/18955'><img alt='Click here to lend your support to: ducktape and make a donation at www.pledgie.com !' src='http://www.pledgie.com/campaigns/18955.png?skin_name=chrome' border='0' /></a>
 
