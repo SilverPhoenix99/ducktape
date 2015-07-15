@@ -1,5 +1,7 @@
 # ducktape
 
+[![Join the chat at https://gitter.im/SilverPhoenix99/ducktape](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/SilverPhoenix99/ducktape?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Gem Version](http://img.shields.io/gem/v/ducktape.svg)](https://rubygems.org/gems/ducktape)
 [![Downloads](https://img.shields.io/gem/dt/ducktape.svg)](https://rubygems.org/gems/ducktape)
 
