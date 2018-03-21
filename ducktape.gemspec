@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.files         = Dir['{lib/**/*.rb,*.md}']
   s.add_dependency 'facets', '~> 3'
   s.add_dependency 'whittle', '~> 0.0'
-  s.add_dependency 'ref', '~> 1'
+  s.add_dependency 'ref', '~> 2'
   s.add_development_dependency 'rspec', '~> 3'
   s.post_install_message = <<-eos
 +----------------------------------------------------------------------------+

@@ -1,31 +1,30 @@
-%w'
-  set
-  facets/ostruct
-  facets/array/extract_options
-  ref
-  whittle
-'.each { |f| require f }
+require "set"
+require "facets/ostruct"
+require "facets/array/extract_options"
+require "ref"
+require "whittle"
 
-%w'
-  version
-  hookable
-  expression/literal_exp
-  expression/binary_op_exp
-  expression/identifier_exp
-  expression/indexer_exp
-  expression/property_exp
-  expression/qualified_exp
-  expression/binding_parser
-  converter
-  link
-  binding_source
-  validators/class_validator
-  validators/proc_validator
-  validators/regexp_validator
-  validators/range_validator
-  validators/equality_validator
-  bindable_attribute_metadata
-  bindable_attribute
-  bindable
-  ext/def_hookable
-'.each { |f| require_relative "ducktape/#{f}" }
+module Ducktape; end
+
+require_relative "ducktape/version"
+require_relative "ducktape/hookable"
+# require_relative "ducktape/expression/literal_exp"
+# require_relative "ducktape/expression/binary_op_exp"
+# require_relative "ducktape/expression/identifier_exp"
+# require_relative "ducktape/expression/indexer_exp"
+# require_relative "ducktape/expression/property_exp"
+# require_relative "ducktape/expression/qualified_exp"
+# require_relative "ducktape/expression/binding_parser"
+# require_relative "ducktape/converter"
+# require_relative "ducktape/link"
+# require_relative "ducktape/binding_source"
+# require_relative "ducktape/validators/any_value_validator"
+# require_relative "ducktape/validators/module_validator"
+# require_relative "ducktape/validators/proc_validator"
+# require_relative "ducktape/validators/regexp_validator"
+# require_relative "ducktape/validators/range_validator"
+# require_relative "ducktape/validators/equality_validator"
+# require_relative "ducktape/bindable_attribute_metadata"
+# require_relative "ducktape/bindable_attribute"
+# require_relative "ducktape/bindable"
+# require_relative "ducktape/ext/def_hookable"
