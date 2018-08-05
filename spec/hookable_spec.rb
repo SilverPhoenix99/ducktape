@@ -49,21 +49,31 @@ RSpec.describe Hookable do
       expect { subject.add_hook(:on_test) }.to raise_error(ArgumentError)
     end
 
-    it 'has an alias for procs' do
-      expect(subject).to receive(:add_hook).with(:on_test, hook)
+    it 'has an overload for procs' do
+      expect(subject).to receive(:add_hook).with(:on_test, hook).and_call_original
       subject.on_test hook
     end
 
-    it 'has an alias for blocks' do
-      expect(subject).to receive(:add_hook).with(:on_test, nil) do |*, &hook_block|
+    it 'has an overload for blocks' do
+      expect(subject).to receive(:add_hook).with(:on_test, nil).and_wrap_original do |m, *args, &hook_block|
         expect(hook_block).to be_a Proc
+        m.call(*args, &hook_block)
       end
 
       subject.on_test &hook
     end
 
-    it 'has an alias for method names' do
-      expect(subject).to receive(:add_hook).with(:on_test, :test_method)
+    it 'has an overload for named blocks' do
+      expect(subject).to receive(:add_hook).with(:on_test, :block_name).and_wrap_original do |m, *args, &hook_block|
+        expect(hook_block).to be_a Proc
+        m.call(*args, &hook_block)
+      end
+
+      subject.on_test :block_name, &hook
+    end
+
+    it 'has an overload for method names' do
+      expect(subject).to receive(:add_hook).with(:on_test, :test_method).and_call_original
       subject.on_test :test_method
     end
   end
@@ -104,25 +114,43 @@ RSpec.describe Hookable do
   end
 
   describe '#remove_hook' do
-    it "doesn't call the removed hook" do
-      subject.add_hook :on_test, :hook_method
-
+    it "doesn't call the removed method hook" do
       expect(subject).to_not receive(:hook_method)
 
+      subject.add_hook :on_test, :hook_method
       subject.remove_hook :on_test, :hook_method
+
+      subject.send :call_hook, :on_test
+    end
+
+    it "doesn't call the removed named block hook" do
+      expect(hook).to_not receive(:call)
+
+      subject.add_hook :on_test, :block_name, &hook
+      subject.remove_hook :on_test, :block_name
+
+      subject.send :call_hook, :on_test
+    end
+
+    it "doesn't call the removed block hook" do
+      expect(hook).to_not receive(:call)
+
+      subject.add_hook :on_test, &hook
+      subject.remove_hook :on_test, hook
+
       subject.send :call_hook, :on_test
     end
   end
 
   describe '#clear_hooks' do
     it "doesn't call any hooks" do
-      subject.add_hook :on_test, :hook_method
-      subject.add_hook :on_test, hook
-
       expect(subject).to_not receive(:hook_method)
       expect(hook).to_not receive(:call)
 
+      subject.add_hook :on_test, :hook_method
+      subject.add_hook :on_test, hook
       subject.clear_hooks :on_test
+
       subject.send :call_hook, :on_test
     end
   end

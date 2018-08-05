@@ -20,17 +20,22 @@ module Ducktape::Hookable
   end
 
   def add_hook(name, hook = nil, &hook_block)
-    raise ArgumentError, 'cannot accept both hook argument and block' if hook && hook_block
-    raise ArgumentError, 'no hook provided' unless hook || hook_block
+    case hook
+      when String, Symbol
+        hook = hook.to_sym
+        @hooks[name][hook] = hook_block || proc { |*args| send(hook, *args) }
 
-    hook ||= hook_block
-    hook = hook.to_sym if hook.is_a?(String)
+      when Proc
+        raise ArgumentError, 'cannot accept both hook argument and block' if hook_block
+        @hooks[name][hook] = hook
 
-    key = hook
+      when nil
+        raise ArgumentError, 'no hook provided' unless hook_block
+        @hooks[name][hook_block] = hook_block
 
-    hook = proc { |*args| send(key, *args) } if hook.is_a?(Symbol)
-
-    @hooks[name][key] = hook
+      else
+        raise ArgumentError, "invalid hook type: `#{hook.class}'"
+    end
   end
 
   protected def call_hook(name, **event_args)
