@@ -1,4 +1,5 @@
 require_relative 'test_helper'
+require_relative '../lib/ducktape/hookable'
 
 include Ducktape
 
@@ -10,7 +11,7 @@ RSpec.describe Hookable do
     Class.new do
       include Hookable
 
-      def_hook :on_test
+      def_hooks :on_test, :on_2nd_test
 
       def hook_method(*)
       end
@@ -41,12 +42,12 @@ RSpec.describe Hookable do
 
   describe '#add_hook' do
 
-    example 'with both proc and block arguments' do
-      expect { subject.add_hook(:on_test, hook, &hook) }.to raise_error(ArgumentError)
-    end
-
     example 'without proc and block arguments' do
       expect { subject.add_hook(:on_test) }.to raise_error(ArgumentError)
+    end
+
+    example 'with both proc and block arguments' do
+      expect { subject.add_hook(:on_test, hook, &hook) }.to raise_error(ArgumentError)
     end
 
     it 'has an overload for procs' do
@@ -142,16 +143,31 @@ RSpec.describe Hookable do
     end
   end
 
-  describe '#clear_hooks' do
-    it "doesn't call any hooks" do
-      expect(subject).to_not receive(:hook_method)
-      expect(hook).to_not receive(:call)
+  describe '#remove_hooks' do
+    it 'removes all hooks associated with the specified name' do
+      expect(subject).to_not receive :hook_method
+      expect(hook).to receive :call
 
       subject.add_hook :on_test, :hook_method
-      subject.add_hook :on_test, hook
-      subject.clear_hooks :on_test
+      subject.add_hook :on_2nd_test, hook
+      subject.remove_hooks :on_test
 
       subject.send :call_hook, :on_test
+      subject.send :call_hook, :on_2nd_test
+    end
+  end
+
+  describe '#clear_hooks' do
+    it 'removes all hooks' do
+      expect(subject).to_not receive :hook_method
+      expect(hook).to_not receive :call
+
+      subject.add_hook :on_test, :hook_method
+      subject.add_hook :on_2nd_test, hook
+      subject.clear_hooks
+
+      subject.send :call_hook, :on_test
+      subject.send :call_hook, :on_2nd_test
     end
   end
 end

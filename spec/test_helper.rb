@@ -1,5 +1,3 @@
-require_relative '../lib/ducktape'
-
 require 'rspec/expectations'
 
 RSpec.configure do |config|
